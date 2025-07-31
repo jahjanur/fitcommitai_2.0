@@ -74,6 +74,7 @@ const DashboardScreen = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showNavbar, setShowNavbar] = useState(true);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [progressHistory, setProgressHistory] = useState<{ body_fat: number; timestamp: string; analysis?: string }[]>([]);
   const [selectedPoint, setSelectedPoint] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<null | {
@@ -94,6 +95,8 @@ const DashboardScreen = () => {
     { label: 'Yearly', value: 'Yearly' },
   ];
   const [latestScan, setLatestScan] = useState<any>(null);
+  const [bmiInfoVisible, setBmiInfoVisible] = useState(false);
+  const [tdeeInfoVisible, setTdeeInfoVisible] = useState(false);
 
   const chartConfig = {
     backgroundGradientFrom: colors.white,
@@ -165,18 +168,25 @@ const DashboardScreen = () => {
     if (isFocused) {
       const fetchProfile = async () => {
         try {
+          const firstLogin = await AsyncStorage.getItem('isFirstLogin');
+          if (firstLogin === 'true') {
+            setIsFirstLogin(true);
+            await AsyncStorage.removeItem('isFirstLogin');
+          } else {
+            setIsFirstLogin(false);
+          }
           setLoadingProfile(true);
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
           if (userError) throw userError;
-          if (user) {
-            const { data, error, status } = await supabase
-              .from('profiles')
+      if (user) {
+        const { data, error, status } = await supabase
+          .from('profiles')
               .select('id, email, name, age, gender, height_cm, weight_kg, bmi_bmi, tdee_tdee')
-              .eq('id', user.id)
-              .single();
+          .eq('id', user.id)
+          .single();
             if (error && status !== 406) throw error;
-            if (data) {
-              setProfile(data as UserProfile);
+        if (data) {
+          setProfile(data as UserProfile);
               await fetchProgressHistory(data.id);
               // Calculate and update BMI/TDEE if missing
               if ((data.bmi_bmi == null || data.tdee_tdee == null) && data.weight_kg && data.height_cm && data.age && data.gender) {
@@ -193,18 +203,18 @@ const DashboardScreen = () => {
               }
             } else {
               setProfile(null);
-            }
-          } else {
-            setProfile(null);
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-          setProfile(null);
-        } finally {
-          setLoadingProfile(false);
         }
-      };
-      fetchProfile();
+      } else {
+        setProfile(null);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+          setProfile(null);
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+    fetchProfile();
     }
   }, [isFocused]);
 
@@ -224,10 +234,10 @@ const DashboardScreen = () => {
           if (data) {
             setProfile(data as UserProfile);
             await fetchProgressHistory(data.id);
-          } else {
+    } else {
             setProfile(null);
           }
-        } else {
+    } else {
           setProfile(null);
         }
       } catch (error) {
@@ -235,14 +245,14 @@ const DashboardScreen = () => {
         setProfile(null);
       } finally {
         setRefreshing(false);
-      }
+    }
     };
     fetchProfile();
   };
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+    await supabase.auth.signOut();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -257,12 +267,12 @@ const DashboardScreen = () => {
         .select('body_fat, timestamp, analysis')
         .eq('user_id', userId)
         .order('timestamp', { ascending: true });
-      
+
       if (error) {
         console.error('Error fetching progress history:', error);
         return;
       }
-      
+
       if (data) {
         const formattedData = data.map(item => ({
           body_fat: item.body_fat,
@@ -275,7 +285,7 @@ const DashboardScreen = () => {
         if (formattedData.length > 0) {
           const latest = formattedData[formattedData.length - 1];
           setBodyFatPercentage(latest.body_fat);
-        }
+      }
       }
       // Fetch latest scan for BMI, TDEE, and analysis_rationale
       const { data: scanData, error: scanError } = await supabase
@@ -394,13 +404,13 @@ const DashboardScreen = () => {
               style={styles.profileImage}
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.welcomeText}>Welcome back!</Text>
+              <Text style={styles.welcomeText}>{isFirstLogin ? 'Welcome' : 'Welcome back!'}</Text>
               <Text style={styles.nameText}>{profile?.name || 'User'}</Text>
               <Text style={styles.profileDetails}>
                 {profile?.age} years • {profile?.height_cm}cm • {profile?.weight_kg}kg
               </Text>
-            </View>
           </View>
+      </View>
         </View>
 
         {/* BMI and TDEE Cards: Only show TDEE if available */}
@@ -420,6 +430,14 @@ const DashboardScreen = () => {
         >
           {/* BMI Card (always shown) */}
           <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 }}>
+            {/* Info Icon */}
+            <TouchableOpacity
+              style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
+              onPress={() => setBmiInfoVisible(true)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="information-circle-outline" size={22} color={colors.white} />
+            </TouchableOpacity>
             <Animated.View style={{
               position: 'absolute',
               top: -4, left: -4, right: -4, bottom: -4,
@@ -450,6 +468,14 @@ const DashboardScreen = () => {
           {/* TDEE Card (only if available and at least one scan) */}
           {progressHistory.length > 0 && profile?.tdee_tdee && (
             <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.buttonPrimary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 }}>
+              {/* Info Icon */}
+              <TouchableOpacity
+                style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
+                onPress={() => setTdeeInfoVisible(true)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="information-circle-outline" size={22} color={colors.white} />
+              </TouchableOpacity>
               <Animated.View style={{
                 position: 'absolute',
                 top: -4, left: -4, right: -4, bottom: -4,
@@ -479,6 +505,72 @@ const DashboardScreen = () => {
             </RNAnimated.View>
           )}
         </Animated.View>
+        {/* BMI Info Modal */}
+        <Modal visible={bmiInfoVisible} transparent animationType="fade" onRequestClose={() => setBmiInfoVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '82%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
+              {/* Exit Icon Top Right */}
+              <TouchableOpacity onPress={() => setBmiInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+              </TouchableOpacity>
+              <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is BMI?</Text>
+                <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+                <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 14, lineHeight: 22 }}>
+                  Your Body Mass Index (BMI) gives you a quick look at your weight relative to your height, helping to categorize if you're underweight, normal, overweight, or obese. It's a useful screening tool, but remember it doesn't directly measure body fat.
+                </Text>
+                {/* BMI Ranges with color - modern, minimal pills */}
+                <View style={{ width: '100%', marginTop: 6, alignItems: 'center' }}>
+                  <Text style={{ fontWeight: 'bold', color: colors.primary, fontSize: 15, marginBottom: 10, textAlign: 'center' }}>BMI Ranges:</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    {/* Underweight */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#4F8EF7', marginRight: 7 }} />
+                      <Text style={{ color: '#4F8EF7', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Underweight</Text>
+                      <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'< 18.5'}</Text>
+                    </View>
+                    {/* Normal Weight */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#3DC47E', marginRight: 7 }} />
+                      <Text style={{ color: '#3DC47E', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Normal</Text>
+                      <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'18.5 - 24.9'}</Text>
+                    </View>
+                    {/* Overweight */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFA726', marginRight: 7 }} />
+                      <Text style={{ color: '#FFA726', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Overweight</Text>
+                      <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'25.0 - 29.9'}</Text>
+                    </View>
+                    {/* Obese */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginBottom: 6 }}>
+                      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#F44336', marginRight: 7 }} />
+                      <Text style={{ color: '#F44336', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Obese</Text>
+                      <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'≥ 30.0'}</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        {/* TDEE Info Modal */}
+        <Modal visible={tdeeInfoVisible} transparent animationType="fade" onRequestClose={() => setTdeeInfoVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '82%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
+              {/* Exit Icon Top Right */}
+              <TouchableOpacity onPress={() => setTdeeInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+              </TouchableOpacity>
+              <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is TDEE?</Text>
+                <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+                <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
+                  TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It is calculated based on your Basal Metabolic Rate (BMR) and your activity level, and helps guide nutrition and fitness planning.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Body Fat Progress Section */}
         <View style={styles.progressSection}>
@@ -545,8 +637,8 @@ const DashboardScreen = () => {
                     <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
                       {progressHistory[progressHistory.length - 1].analysis}
                     </Text>
-                  </View>
-                )}
+        </View>
+      )}
                 {/* Optionally, also show analysis_body_fat if you want, below the rationale */}
                 {latestScan?.analysis_body_fat && (
                   <View style={{
@@ -563,7 +655,7 @@ const DashboardScreen = () => {
                     <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
                       {latestScan.analysis_body_fat}
                     </Text>
-                  </View>
+          </View>
                 )}
               </LinearGradient>
             </RNAnimated.View>
@@ -589,7 +681,7 @@ const DashboardScreen = () => {
                   selectedTextStyle={styles.dropdownSelectedText}
                   iconStyle={styles.dropdownIcon}
                 />
-              </View>
+        </View>
               <LineChart
                 data={{
                   labels: chartLabels,
@@ -682,7 +774,7 @@ const DashboardScreen = () => {
                         >
                           <Text style={{ fontWeight: 'bold', color: colors.text.primary, fontSize: 16 }}>{tooltipPos.value.toFixed(1)}%</Text>
                           <Text style={{ color: colors.text.secondary, fontSize: 12 }}>{tooltipPos.date}</Text>
-                        </View>
+        </View>
                       </>
                     );
                   }
@@ -692,76 +784,76 @@ const DashboardScreen = () => {
                   activeIndex === index ? colors.buttonPrimary : colors.buttonPrimary + '99'
                 }
               />
-            </View>
+        </View>
           )}
           {/* Show a friendly message if there are no data points at all */}
           {progressHistory.length === 0 && (
             <View style={styles.noDataCard}>
               <Text style={styles.noDataText}>No progress data yet</Text>
               <Text style={styles.noDataSubtext}>Upload your first scan to see your progress chart here.</Text>
-            </View>
+        </View>
           )}
 
           {/* Modern Interactive Chart with Enhanced Features */}
 
             
-        </View>
+      </View>
 
-        {/* Action Buttons */}
-        <View style={styles.homeActionButtonsContainer}>
-          <TouchableOpacity 
-            style={styles.homeActionButton}
+      {/* Action Buttons */}
+      <View style={styles.homeActionButtonsContainer}>
+        <TouchableOpacity 
+          style={styles.homeActionButton}
             onPress={() => navigation.navigate('Upload')}
+        >
+          <LinearGradient
+            colors={[colors.darkBlue, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.homeActionButtonGradient}
           >
-            <LinearGradient
-              colors={[colors.darkBlue, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.homeActionButtonGradient}
-            >
-              <Ionicons name="camera-outline" size={24} color={colors.white} />
-              <Text style={styles.homeActionButtonText}>Upload New Scan</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            <Ionicons name="camera-outline" size={24} color={colors.white} />
+            <Text style={styles.homeActionButtonText}>Upload New Scan</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.homeActionButton}
+        <TouchableOpacity 
+          style={styles.homeActionButton}
             onPress={() => navigation.navigate('Diet')}
+        >
+          <LinearGradient
+            colors={[colors.darkBlue, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.homeActionButtonGradient}
           >
-            <LinearGradient
-              colors={[colors.darkBlue, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.homeActionButtonGradient}
-            >
-              <Ionicons name="restaurant-outline" size={24} color={colors.white} />
-              <Text style={styles.homeActionButtonText}>View Diet Plan</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+            <Ionicons name="restaurant-outline" size={24} color={colors.white} />
+            <Text style={styles.homeActionButtonText}>View Diet Plan</Text>
+          </LinearGradient>
+        </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.homeActionButton}
+        <TouchableOpacity 
+          style={styles.homeActionButton}
             onPress={() => navigation.navigate('Progress')}
+        >
+          <LinearGradient
+            colors={[colors.darkBlue, colors.primary]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.homeActionButtonGradient}
           >
-            <LinearGradient
-              colors={[colors.darkBlue, colors.primary]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.homeActionButtonGradient}
-            >
-              <Ionicons name="folder-outline" size={24} color={colors.white} />
-              <Text style={styles.homeActionButtonText}>View History</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+            <Ionicons name="folder-outline" size={24} color={colors.white} />
+            <Text style={styles.homeActionButtonText}>View History</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
-        {/* Tip Section */}
-        <View style={styles.tipContainer}>
-          <Ionicons name="bulb-outline" size={20} color={colors.buttonPrimary} />
-          <Text style={styles.tipText}>Losing fat improves brain function. Sharper thinking, better focus, clearer mind.</Text>
-        </View>
-      </ScrollView>
-    );
+      {/* Tip Section */}
+      <View style={styles.tipContainer}>
+        <Ionicons name="bulb-outline" size={20} color={colors.buttonPrimary} />
+        <Text style={styles.tipText}>Losing fat improves brain function. Sharper thinking, better focus, clearer mind.</Text>
+      </View>
+    </ScrollView>
+  );
   };
 
   return (
@@ -772,17 +864,17 @@ const DashboardScreen = () => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={{
-          width: '100%',
-          height: 120,
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          borderBottomLeftRadius: 30,
-          borderBottomRightRadius: 30,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingTop: Platform.OS === 'ios' ? 40 : 20,
-          zIndex: 1,
+    width: '100%',
+    height: 120,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: Platform.OS === 'ios' ? 40 : 20,
+    zIndex: 1,
         }}
       >
         <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.white }}>Dashboard</Text>

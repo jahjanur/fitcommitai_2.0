@@ -20,6 +20,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const femaleIcon = require('../../../assets/🙋🏻‍♀️.png');
 const maleIcon = require('../../../assets/🤷🏻‍.png');
@@ -158,8 +159,9 @@ const SignupScreen = () => {
             throw profileError;
           }
 
+          await AsyncStorage.setItem('isFirstLogin', 'true');
           Alert.alert('Success', 'Account created and profile saved!');
-          navigation.navigate('Dashboard');
+          navigation.navigate('Dashboard', { screen: 'Dashboard' });
         } else {
           Alert.alert('Error', 'User object not returned after signup.');
         }
@@ -290,18 +292,6 @@ const SignupScreen = () => {
             <Text style={styles.label}>Gender</Text>
             <View style={styles.genderButtonsContainer}>
               <TouchableOpacity
-                style={getGenderButtonStyle('female')}
-                onPress={() => {
-                  setFormData({ ...formData, gender: 'female' });
-                  setErrors({ ...errors, gender: '' });
-                }}
-                onFocus={() => setFocusedField('gender')}
-                onBlur={() => setFocusedField(null)}
-              >
-                <Image source={femaleIcon} style={styles.genderIcon} />
-                <Text style={[styles.genderButtonText, formData.gender === 'female' && styles.genderButtonTextSelected]}>Female</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 style={getGenderButtonStyle('male')}
                 onPress={() => {
                   setFormData({ ...formData, gender: 'male' });
@@ -312,6 +302,18 @@ const SignupScreen = () => {
               >
                 <Image source={maleIcon} style={styles.genderIcon} />
                 <Text style={[styles.genderButtonText, formData.gender === 'male' && styles.genderButtonTextSelected]}>Male</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={getGenderButtonStyle('female')}
+                onPress={() => {
+                  setFormData({ ...formData, gender: 'female' });
+                  setErrors({ ...errors, gender: '' });
+                }}
+                onFocus={() => setFocusedField('gender')}
+                onBlur={() => setFocusedField(null)}
+              >
+                <Image source={femaleIcon} style={styles.genderIcon} />
+                <Text style={[styles.genderButtonText, formData.gender === 'female' && styles.genderButtonTextSelected]}>Female</Text>
               </TouchableOpacity>
             </View>
             {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}

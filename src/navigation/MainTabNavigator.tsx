@@ -63,25 +63,25 @@ interface CustomTabBarButtonProps {
 const HomeTabBarButton: React.FC<CustomTabBarButtonProps> = ({ children, onPress, accessibilityState }) => {
   const navigation = useNavigation();
   return (
-    <TouchableOpacity
-      style={styles.homeTabButton}
-      onPress={() => {
+  <TouchableOpacity
+    style={styles.homeTabButton}
+      onPress={e => {
         // Navigate to DashboardScreen and trigger upload mode
         (navigation as any).navigate('Dashboard', { startUpload: true });
-        if (onPress) onPress();
+        if (onPress) onPress(e);
       }}
-      activeOpacity={0.7}
+    activeOpacity={0.7}
+  >
+    <LinearGradient
+      colors={[colors.buttonPrimary, colors.primary]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.homeTabButtonGradient}
     >
-      <LinearGradient
-        colors={[colors.buttonPrimary, colors.primary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.homeTabButtonGradient}
-      >
-        <SvgXml xml={FitCommitIconHomeSvg} width={30} height={30} fill={colors.white} />
-      </LinearGradient>
-    </TouchableOpacity>
-  );
+      <SvgXml xml={FitCommitIconHomeSvg} width={30} height={30} fill={colors.white} />
+    </LinearGradient>
+  </TouchableOpacity>
+);
 };
 
 const MainTabNavigator = () => {
@@ -92,7 +92,7 @@ const MainTabNavigator = () => {
           let iconComponent: React.ReactNode;
           if (route.name === 'Dashboard') {
             iconComponent = <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
-          } else if (route.name === 'DietPlan') {
+          } else if (route.name === 'Diet') {
             iconComponent = <Ionicons name={focused ? 'restaurant' : 'restaurant-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
           } else if (route.name === 'Upload') {
             iconComponent = null; // Center button uses custom button
@@ -148,7 +148,7 @@ const MainTabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="DietPlan" 
+        name="Diet" 
         component={DietPlanScreen}
         options={{
           tabBarLabel: 'Diet Plan',

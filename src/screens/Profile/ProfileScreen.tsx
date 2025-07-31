@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { supabase } from '../../lib/supabase';
@@ -60,31 +59,6 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleImagePick = async () => {
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please grant access to your photo library');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        // TODO: Upload image to Supabase storage and update profile
-        console.log('Selected image:', result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to pick image');
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -102,18 +76,14 @@ const ProfileScreen = () => {
       end={{ x: 1, y: 1 }}
       style={styles.topSection}
     >
-      <TouchableOpacity onPress={handleImagePick} style={styles.avatarContainer}>
+      <View style={styles.avatarContainer}>
         <LinearGradient
           colors={[colors.buttonPrimary, colors.primary]}
           style={styles.avatarGradient}
         >
-          {profile?.avatar_url ? (
-            <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-          ) : (
-            <Ionicons name="person" size={40} color={colors.white} />
-          )}
+          <Ionicons name="person" size={40} color={colors.white} />
         </LinearGradient>
-      </TouchableOpacity>
+      </View>
       <Text style={styles.username}>{profile?.name || 'User'}</Text>
       <Text style={styles.email}>{profile?.email || 'user@example.com'}</Text>
     </LinearGradient>
@@ -125,11 +95,6 @@ const ProfileScreen = () => {
       <TouchableOpacity style={styles.actionButton} onPress={() => setShowChangePasswordForm(true)}>
         <Ionicons name="key-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Change Password</Text>
-        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={handleImagePick}>
-        <Ionicons name="image-outline" size={24} color={colors.buttonPrimary} />
-        <Text style={styles.actionButtonText}>Upload Profile Picture</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>

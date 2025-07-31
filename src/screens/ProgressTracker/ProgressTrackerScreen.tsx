@@ -14,6 +14,10 @@ const ProgressTrackerScreen = () => {
   const [selectedScan, setSelectedScan] = useState<any | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [profile, setProfile] = useState<any | null>(null);
+  const [bodyFatInfoVisible, setBodyFatInfoVisible] = useState(false);
+  const [changeInfoVisible, setChangeInfoVisible] = useState(false);
+  const [bmiInfoVisible, setBmiInfoVisible] = useState(false);
+  const [tdeeInfoVisible, setTdeeInfoVisible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -185,10 +189,18 @@ const ProgressTrackerScreen = () => {
   const renderSummaryMetrics = () => (
     <View style={styles.metricsContainer}>
       <View style={styles.metricCard}>
+        {/* Info Icon */}
+        <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setBodyFatInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
+        </TouchableOpacity>
         <Text style={styles.metricLabel}>Latest Body Fat</Text>
         <Text style={styles.metricValue}>{latestBodyFat != null ? `${latestBodyFat}%` : '--%'}</Text>
       </View>
       <View style={styles.metricCard}>
+        {/* Info Icon */}
+        <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setChangeInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
+        </TouchableOpacity>
         <Text style={styles.metricLabel}>Overall Change</Text>
         <View style={{ alignItems: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
@@ -208,10 +220,18 @@ const ProgressTrackerScreen = () => {
         </View>
       </View>
       <View style={styles.metricCard}>
+        {/* Info Icon */}
+        <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setBmiInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
+        </TouchableOpacity>
         <Text style={styles.metricLabel}>Latest BMI</Text>
         <Text style={styles.metricValue}>{profile?.bmi_bmi ?? '--'}</Text>
       </View>
       <View style={styles.metricCard}>
+        {/* Info Icon */}
+        <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setTdeeInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
+        </TouchableOpacity>
         <Text style={styles.metricLabel}>Latest TDEE</Text>
         <Text style={styles.metricValue}>{profile?.tdee_tdee ?? '--'}</Text>
       </View>
@@ -300,6 +320,11 @@ const ProgressTrackerScreen = () => {
     </LinearGradient>
   );
 
+  // Info Modals
+  // Modal style matches DashboardScreen
+  const infoModalCardStyle = { backgroundColor: colors.white, borderRadius: 22, padding: 0, width: 0.82 * Dimensions.get('window').width, maxWidth: 400, alignItems: 'center' as const, shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 };
+  const infoModalContentStyle = { padding: 26, paddingHorizontal: 10, width: 0.82 * Dimensions.get('window').width, maxWidth: 400, alignItems: 'center' as const };
+
   return (
     <View style={styles.container}>
       {renderHeader()}
@@ -315,6 +340,80 @@ const ProgressTrackerScreen = () => {
         </ScrollView>
       </View>
       {renderScanModal()}
+      {/* Info Modals */}
+      {/* Body Fat */}
+      <Modal visible={bodyFatInfoVisible} transparent animationType="fade" onRequestClose={() => setBodyFatInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={infoModalCardStyle}>
+            <TouchableOpacity onPress={() => setBodyFatInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            <View style={infoModalContentStyle}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Latest Body Fat</Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+              <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
+                This is your most recent body fat percentage, estimated from your latest scan. Tracking your body fat helps you understand changes in your body composition over time.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Overall Change */}
+      <Modal visible={changeInfoVisible} transparent animationType="fade" onRequestClose={() => setChangeInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={infoModalCardStyle}>
+            <TouchableOpacity onPress={() => setChangeInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            <View style={infoModalContentStyle}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Overall Change</Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+              <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 10, lineHeight: 22 }}>
+                This shows how your body fat percentage has changed since your first scan. Both the absolute and relative changes help you see your progress over time.
+              </Text>
+              <View style={{ alignSelf: 'flex-start', marginLeft: 6, marginBottom: 2 }}>
+                <Text style={{ fontSize: 15, color: colors.primary, fontWeight: 'bold', marginBottom: 4 }}>What do these mean?</Text>
+                <Text style={{ fontSize: 15, color: colors.text.primary, marginBottom: 2 }}>• <Text style={{ fontWeight: 'bold' }}>Absolute Change:</Text> The difference in body fat percentage between your first and latest scan. (e.g., from 30% to 25% = <Text style={{ color: colors.success }}>-5%</Text>)</Text>
+                <Text style={{ fontSize: 15, color: colors.text.primary }}>• <Text style={{ fontWeight: 'bold' }}>Relative Change:</Text> The percentage change relative to your starting value. (e.g., a drop from 30% to 25% = <Text style={{ color: colors.success }}>-16.7%</Text> relative change)</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* BMI */}
+      <Modal visible={bmiInfoVisible} transparent animationType="fade" onRequestClose={() => setBmiInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={infoModalCardStyle}>
+            <TouchableOpacity onPress={() => setBmiInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            <View style={infoModalContentStyle}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Latest BMI</Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+              <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
+                BMI (Body Mass Index) is a value derived from your height and weight. It helps categorize your weight status, but does not directly measure body fat.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* TDEE */}
+      <Modal visible={tdeeInfoVisible} transparent animationType="fade" onRequestClose={() => setTdeeInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={infoModalCardStyle}>
+            <TouchableOpacity onPress={() => setTdeeInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            <View style={infoModalContentStyle}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Latest TDEE</Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+              <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
+                TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It helps guide your nutrition and fitness planning.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };

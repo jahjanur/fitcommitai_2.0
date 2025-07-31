@@ -107,7 +107,7 @@ const OnboardingScreen = () => {
         </TouchableOpacity>
 
         {/* Social Login Buttons */}
- 
+  
 
         {/* Footer Text */}
         <Text style={styles.footerText}>

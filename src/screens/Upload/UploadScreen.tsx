@@ -421,6 +421,8 @@ const UploadScreen = () => {
       // After upload, lastScanTime is updated, which will trigger the cooldown modal if scanCooldown > 0
       // Wait a tick to ensure state updates before navigating
       setTimeout(() => {
+        setScanCooldown(0); // Reset cooldown when navigating away
+        setOverrideScanLock(false);
         navigation.navigate('Dashboard', { screen: 'Dashboard' });
       }, 0);
       return true;
@@ -704,6 +706,10 @@ const UploadScreen = () => {
         visible={scanCooldown > 0 && !overrideScanLock && (currentStep === 'front' || currentStep === 'side' || currentStep === 'back')}
         transparent
         animationType="fade"
+        onRequestClose={() => {
+          setScanCooldown(0);
+          setOverrideScanLock(false);
+        }}
       >
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(30,40,60,0.18)' }}>
           <LinearGradient
@@ -771,8 +777,15 @@ const UploadScreen = () => {
             justifyContent: 'center',
             paddingTop: Platform.OS === 'ios' ? 40 : 20,
             zIndex: 1,
+            flexDirection: 'row',
           }}
         >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={{ position: 'absolute', left: 20, top: Platform.OS === 'ios' ? 60 : 45, zIndex: 2, padding: 10 }}
+          >
+            <Ionicons name="arrow-back" size={28} color={colors.white} />
+          </TouchableOpacity>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.white }}>Upload Photos</Text>
         </LinearGradient>
         <View style={{ flex: 1, paddingTop: 100 }}>
