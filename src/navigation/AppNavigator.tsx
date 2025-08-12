@@ -4,12 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import { RootStackParamList } from '../types/navigation';
 import { colors } from '../theme/colors';
-import * as Linking from 'react-native'; // fallback if expo-linking is not available
 import { supabase } from '../lib/supabase';
 // Screens
 import LoginScreen from '../screens/Login/LoginScreen';
 import SignupScreen from '../screens/Signup/SignupScreen';
-import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import RoleSelectionScreen from '../screens/RoleSelection/RoleSelectionScreen';
 import MainTabNavigator from './MainTabNavigator';
 import OnboardingScreen from '../screens/Onboarding/OnboardingScreen';
@@ -21,8 +19,12 @@ const linking = {
   prefixes: ['fitcommit://'],
   config: {
     screens: {
-      ResetPassword: 'reset-password',
-      // Add other screens if you want to support more deep links
+      ResetPassword: {
+        path: 'reset-password',
+        parse: {
+          access_token: (access_token: string) => `?access_token=${access_token}`,
+        },
+      },
     },
   },
 };

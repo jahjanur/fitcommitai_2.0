@@ -1,59 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { RootStackNavigationProp } from '../../types/navigation';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { supabase } from '../../lib/supabase';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { supabase } from '../../lib/supabase';
+import { RootStackNavigationProp, RootStackRouteProp } from '../../types/navigation';
 
 const ResetPasswordScreen = () => {
+  const route = useRoute<RootStackRouteProp<'ResetPassword'>>();
   const navigation = useNavigation<RootStackNavigationProp>();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Supabase deeplinks for password reset include the access token in the URL fragment
+    // We need to extract it from the route params passed by the navigator
+    if (route.params?.access_token) {
+      setAccessToken(route.params.access_token);
+    }
+  }, [route.params]);
 
   const handleResetPassword = async () => {
     if (!password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Alert.alert('Error', 'Please enter and confirm your new password.');
       return;
     }
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
-    if (password.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters.');
+    if (!accessToken) {
+      Alert.alert('Error', 'Invalid or missing reset token.');
       return;
     }
+
     setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) {
-        Alert.alert('Error', error.message);
-      } else {
-        Alert.alert('Success', 'Password has been reset. Please log in.');
-        navigation.navigate('Login');
-      }
-    } catch (err: any) {
-      Alert.alert('Error', err.message || 'Something went wrong.');
-    } finally {
-      setLoading(false);
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      Alert.alert('Success', 'Your password has been reset successfully.');
+      navigation.navigate('Login');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Reset Password</Text>
+      <Text style={styles.title}>Reset Your Password</Text>
       <TextInput
         style={styles.input}
-        placeholder="New Password"
+        placeholder="Enter new password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
       <TextInput
         style={styles.input}
-        placeholder="Confirm New Password"
+        placeholder="Confirm new password"
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
@@ -66,42 +73,37 @@ const ResetPasswordScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.buttonPrimary,
-    marginBottom: 24,
-  },
-  input: {
-    width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 16,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  button: {
-    backgroundColor: colors.buttonPrimary,
-    borderRadius: 10,
-    padding: 16,
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 8,
-  },
-  buttonText: {
-    color: colors.white,
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+        backgroundColor: colors.background,
+    },
+    title: {
+        ...(typography.h2 as any),
+        textAlign: 'center',
+        marginBottom: 20,
+        color: colors.text.primary,
+    },
+    input: {
+        backgroundColor: colors.white,
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 15,
+        fontSize: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    button: {
+        backgroundColor: colors.buttonPrimary,
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    buttonText: {
+        ...(typography.button as any),
+        color: colors.white,
+    },
 });
 
 export default ResetPasswordScreen; 

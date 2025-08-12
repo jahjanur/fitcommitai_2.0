@@ -17,7 +17,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../lib/supabase';
-import ChangePassword from '../Profile/ChangePassword';
+import ForgotPasswordModal from '../Auth/ForgotPasswordModal';
 
 const LoginScreen = () => {
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -136,7 +136,7 @@ const LoginScreen = () => {
       >
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ width: '90%', backgroundColor: colors.background, borderRadius: 20, padding: 20, shadowColor: colors.buttonPrimary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 }}>
-            <ChangePassword userEmail={email} onlyForgotPassword />
+            <ForgotPasswordModal onPasswordReset={() => setForgotPasswordVisible(false)} />
             <TouchableOpacity onPress={() => setForgotPasswordVisible(false)} style={{ alignSelf: 'flex-end', marginTop: 8 }}>
               <Text style={{ color: colors.buttonPrimary, fontWeight: 'bold', fontSize: 16 }}>Close</Text>
             </TouchableOpacity>
