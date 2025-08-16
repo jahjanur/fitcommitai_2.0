@@ -10,6 +10,7 @@ import {
   Alert,
   Switch,
   Linking,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,6 +34,7 @@ const ProfileScreen = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [vacationMode, setVacationMode] = useState(false);
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
+  const [methodologyModalVisible, setMethodologyModalVisible] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -69,6 +71,26 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone. You will be redirected to our account deletion form.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            Linking.openURL('https://docs.google.com/forms/d/152NxJJvQLiXLxwQDXEy9RzXN7QhLlz20hk8r9Vzvmkw/viewform?edit_requested=true');
+          },
+        },
+      ]
+    );
+  };
+
   const renderTopSection = () => (
     <LinearGradient
       colors={[colors.darkBlue, colors.primary]}
@@ -100,6 +122,11 @@ const ProfileScreen = () => {
       <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={24} color={colors.error} />
         <Text style={[styles.actionButtonText, { color: colors.error }]}>Logout</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.actionButton} onPress={handleDeleteAccount}>
+        <Ionicons name="trash-outline" size={24} color={colors.error} />
+        <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete My Account</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       {showChangePasswordForm && (
@@ -148,19 +175,36 @@ const ProfileScreen = () => {
   const renderLegalInfo = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Legal & Info</Text>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/terms')}
+      >
         <Ionicons name="document-text-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Terms & Conditions</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/privacy')}
+      >
         <Ionicons name="shield-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Privacy Policy</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/mental-health')}
+      >
         <Ionicons name="heart-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Mental Health Disclaimer</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => setMethodologyModalVisible(true)}
+      >
+        <Ionicons name="analytics-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Methodology</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
     </View>
@@ -169,22 +213,34 @@ const ProfileScreen = () => {
   const renderAboutHelp = () => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>About & Help</Text>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
         <Ionicons name="star-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Rate on App Store</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
         <Ionicons name="share-social-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Share with Friends</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
         <Ionicons name="mail-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Contact Support</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
         <Ionicons name="help-circle-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>FAQ / Help Center</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
@@ -200,6 +256,135 @@ const ProfileScreen = () => {
       {renderLegalInfo()}
       {renderAboutHelp()}
       <Text style={styles.versionText}>FitCommit™ v1.0 – Designed by MobileFitCommit</Text>
+      
+      {/* Methodology Modal */}
+      <Modal visible={methodologyModalVisible} transparent animationType="fade" onRequestClose={() => setMethodologyModalVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '90%', maxHeight: '85%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
+            {/* Exit Icon Top Right */}
+            <TouchableOpacity onPress={() => setMethodologyModalVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            
+            <ScrollView style={{ width: '100%', padding: 26 }} showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8, textAlign: 'center' }}>
+                App Store Compliance Update: Health Measurement Disclaimer & Methodology
+              </Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 24, opacity: 0.18, alignSelf: 'center' }} />
+              
+              {/* Section A: Summary */}
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, color: colors.primary, fontWeight: '600', marginBottom: 12 }}>
+                  A) Summary
+                </Text>
+                <Text style={{ fontSize: 15, color: colors.text.primary, lineHeight: 22 }}>
+                  Body fat % is an estimate of the proportion of fat mass to total body mass. FitCommit AI uses photos to estimate this value using AI image analysis, which can vary based on image quality, clothing, and posture. This is for educational purposes only and not a medical diagnosis.
+                </Text>
+              </View>
+              
+              {/* Section B: Body Fat Categories */}
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, color: colors.primary, fontWeight: '600', marginBottom: 12 }}>
+                  B) Common adult body fat categories (ACE)
+                </Text>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16, color: colors.text.primary, fontWeight: '600', marginBottom: 8 }}>
+                    Men:
+                  </Text>
+                  <Text style={{ fontSize: 15, color: colors.text.secondary, lineHeight: 20 }}>
+                    Essential 2–5%, Athletes 6–13%, Fitness 14–17%, Average 18–24%, Obesity 25%+
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16, color: colors.text.primary, fontWeight: '600', marginBottom: 8 }}>
+                    Women:
+                  </Text>
+                  <Text style={{ fontSize: 15, color: colors.text.secondary, lineHeight: 20 }}>
+                    Essential 10–13%, Athletes 14–20%, Fitness 21–24%, Average 25–31%, Obesity 32%+
+                  </Text>
+                </View>
+              </View>
+              
+              {/* Section C: Methodology & Research Basis */}
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, color: colors.primary, fontWeight: '600', marginBottom: 12 }}>
+                  C) Methodology & Research Basis
+                </Text>
+                <Text style={{ fontSize: 15, color: colors.text.primary, lineHeight: 22, marginBottom: 16 }}>
+                  FitCommit AI estimates body fat percentage using computer vision models trained on publicly available research datasets where body composition was measured with reference-standard methods such as Dual-Energy X-ray Absorptiometry (DEXA). These datasets include photographic or anthropometric data linked to validated measurements, allowing the AI to learn correlations between visible physical characteristics and actual body fat percentage.
+                </Text>
+                <Text style={{ fontSize: 15, color: colors.text.primary, lineHeight: 22, marginBottom: 12 }}>
+                  The algorithm's approach is consistent with methods described in peer-reviewed studies on visual anthropometry and AI-based body composition estimation, including:
+                </Text>
+                <View style={{ marginLeft: 16 }}>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 8 }}
+                    onPress={() => Linking.openURL('https://pubmed.ncbi.nlm.nih.gov/17546605/')}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                      • Shape analysis and anthropometry for body composition estimation – Wells, J.C.K. et al., American Journal of Human Biology, 2007.
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 8 }}
+                    onPress={() => Linking.openURL('https://pubmed.ncbi.nlm.nih.gov/27804264/')}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                      • Predicting body composition from 2D images using machine learning – Ng, B.K. et al., Obesity, 2016.
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 8 }}
+                    onPress={() => Linking.openURL('https://www.nature.com/articles/s41598-021-87230-7')}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                      • Body fat percentage estimation from photographs using deep learning – Dinsdale, E. et al., Scientific Reports, 2021.
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 8 }}
+                    onPress={() => Linking.openURL('https://pubmed.ncbi.nlm.nih.gov/28478773/')}
+                  >
+                    <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                      • Accuracy of visual body composition assessments compared to DEXA – Luke, A. et al., British Journal of Nutrition, 2017.
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Section D: Sources */}
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 18, color: colors.primary, fontWeight: '600', marginBottom: 12 }}>
+                  D) Sources for Body Fat % Ranges
+                </Text>
+                <TouchableOpacity 
+                  style={{ marginBottom: 8 }}
+                  onPress={() => Linking.openURL('https://www.acefitness.org/education-and-resources/lifestyle/tools-calculators/percent-body-fat-calculator/')}
+                >
+                  <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                    • American Council on Exercise – Percent Body Fat Norms
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ marginBottom: 8 }}
+                  onPress={() => Linking.openURL('https://www.cdc.gov/healthyweight/assessing/body_composition/index.html')}
+                >
+                  <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                    • CDC – Body Composition Basics
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => Linking.openURL('https://pmc.ncbi.nlm.nih.gov/articles/PMC5384668/')}
+                >
+                  <Text style={{ fontSize: 14, color: colors.buttonPrimary, lineHeight: 20, textDecorationLine: 'underline' }}>
+                    • National Library of Medicine – Body Composition Measurement Techniques
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };

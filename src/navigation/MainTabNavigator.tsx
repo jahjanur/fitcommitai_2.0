@@ -92,8 +92,8 @@ const MainTabNavigator = () => {
           let iconComponent: React.ReactNode;
           if (route.name === 'Dashboard') {
             iconComponent = <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
-          } else if (route.name === 'Diet') {
-            iconComponent = <Ionicons name={focused ? 'restaurant' : 'restaurant-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
+          } else if (route.name === 'AfterPhoto') {
+            iconComponent = <Ionicons name={focused ? 'camera' : 'camera-outline'} size={28} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
           } else if (route.name === 'Upload') {
             iconComponent = null; // Center button uses custom button
           } else if (route.name === 'Progress') {
@@ -148,12 +148,12 @@ const MainTabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Diet" 
+        name="AfterPhoto" 
         component={DietPlanScreen}
         options={{
-          tabBarLabel: 'Diet Plan',
+          tabBarLabel: 'After Photo',
           tabBarIcon: ({ focused }) => (
-            <Ionicons name={focused ? 'restaurant' : 'restaurant-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />
+            <Ionicons name={focused ? 'camera' : 'camera-outline'} size={28} color={focused ? colors.buttonPrimary : colors.text.secondary} />
           ),
         }}
       />

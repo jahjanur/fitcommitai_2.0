@@ -97,6 +97,9 @@ const DashboardScreen = () => {
   const [latestScan, setLatestScan] = useState<any>(null);
   const [bmiInfoVisible, setBmiInfoVisible] = useState(false);
   const [tdeeInfoVisible, setTdeeInfoVisible] = useState(false);
+  const [bodyFatRangesModalVisible, setBodyFatRangesModalVisible] = useState(false);
+  const [menCategoriesExpanded, setMenCategoriesExpanded] = useState(false);
+  const [womenCategoriesExpanded, setWomenCategoriesExpanded] = useState(false);
 
   const chartConfig = {
     backgroundGradientFrom: colors.white,
@@ -571,6 +574,217 @@ const DashboardScreen = () => {
             </View>
           </View>
         </Modal>
+        
+        {/* Body Fat Ranges Info Modal */}
+        <Modal visible={bodyFatRangesModalVisible} transparent animationType="fade" onRequestClose={() => setBodyFatRangesModalVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+            <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '82%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
+              {/* Exit Icon Top Right */}
+              <TouchableOpacity onPress={() => setBodyFatRangesModalVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+              </TouchableOpacity>
+              <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>About Body Fat Ranges</Text>
+                <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
+                
+                {/* Summary */}
+                <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 16, lineHeight: 22 }}>
+                  Body fat % is an estimate of the proportion of fat mass to total body mass. FitCommit AI uses photos to estimate this value using AI image analysis, which can vary based on image quality, clothing, and posture. This is for educational purposes only and not a medical diagnosis.
+                </Text>
+                
+                {/* Common adult body fat categories */}
+                <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 16, lineHeight: 22, fontWeight: '600' }}>
+                  Common adult body fat categories (ACE):
+                </Text>
+                
+                {/* Collapsible Body Fat Categories */}
+                <View style={{ width: '100%', marginBottom: 20 }}>
+                  {/* Men's Categories Dropdown */}
+                  <TouchableOpacity 
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: colors.primary,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 12,
+                    }}
+                    onPress={() => setMenCategoriesExpanded(!menCategoriesExpanded)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.white, marginRight: 12 }} />
+                      <Text style={{ fontSize: 16, color: colors.white, fontWeight: '600' }}>Men's Body Fat Ranges</Text>
+                    </View>
+                    <Ionicons 
+                      name={menCategoriesExpanded ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color={colors.white} 
+                    />
+                  </TouchableOpacity>
+                  
+                  {/* Men's Categories Content */}
+                  {menCategoriesExpanded && (
+                    <View style={{ backgroundColor: '#F8F9FA', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+                      <View style={{ gap: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CAF50', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Essential</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '12%', height: '100%', backgroundColor: '#4CAF50', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>2-5%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#2196F3', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Athletes</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '28%', height: '100%', backgroundColor: '#2196F3', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>6-13%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF9800', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Fitness</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '16%', height: '100%', backgroundColor: '#FF9800', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>14-17%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFC107', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Average</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '25%', height: '100%', backgroundColor: '#FFC107', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>18-24%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#F44336', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Obesity</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '35%', height: '100%', backgroundColor: '#F44336', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>25%+</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                  
+                  {/* Women's Categories Dropdown */}
+                  <TouchableOpacity 
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: colors.buttonPrimary,
+                      borderRadius: 12,
+                      padding: 16,
+                      marginBottom: 12,
+                    }}
+                    onPress={() => setWomenCategoriesExpanded(!womenCategoriesExpanded)}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.white, marginRight: 12 }} />
+                      <Text style={{ fontSize: 16, color: colors.white, fontWeight: '600' }}>Women's Body Fat Ranges</Text>
+                    </View>
+                    <Ionicons 
+                      name={womenCategoriesExpanded ? "chevron-up" : "chevron-down"} 
+                      size={20} 
+                      color={colors.white} 
+                    />
+                  </TouchableOpacity>
+                  
+                  {/* Women's Categories Content */}
+                  {womenCategoriesExpanded && (
+                    <View style={{ backgroundColor: '#F8F9FA', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+                      <View style={{ gap: 8 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#4CAF50', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Essential</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '12%', height: '100%', backgroundColor: '#4CAF50', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>10-13%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#2196F3', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Athletes</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '28%', height: '100%', backgroundColor: '#2196F3', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>14-20%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FF9800', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Fitness</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '16%', height: '100%', backgroundColor: '#FF9800', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>21-24%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#FFC107', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Average</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '28%', height: '100%', backgroundColor: '#FFC107', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>25-31%</Text>
+                        </View>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#F44336', marginRight: 10 }} />
+                          <Text style={{ fontSize: 13, color: colors.text.primary, flex: 1 }}>Obesity</Text>
+                          <View style={{ flex: 1, height: 6, backgroundColor: '#E0E0E0', borderRadius: 3, marginHorizontal: 8 }}>
+                            <View style={{ width: '35%', height: '100%', backgroundColor: '#F44336', borderRadius: 3 }} />
+                          </View>
+                          <Text style={{ fontSize: 13, color: colors.text.secondary, fontWeight: '600', minWidth: 35 }}>32%+</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+                
+                {/* Sources with clickable links */}
+                <View style={{ width: '100%', marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E0E0E0' }}>
+                  <Text style={{ fontSize: 12, color: colors.text.secondary, textAlign: 'center', lineHeight: 18, marginBottom: 8 }}>
+                    <Text style={{ fontWeight: '600' }}>Sources:</Text>
+                  </Text>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 6 }}
+                    onPress={() => Linking.openURL('https://www.acefitness.org/education-and-resources/lifestyle/tools-calculators/percent-body-fat-calculator/')}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.buttonPrimary, textAlign: 'center', textDecorationLine: 'underline' }}>
+                      American Council on Exercise – Percent Body Fat Norms
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={{ marginBottom: 6 }}
+                    onPress={() => Linking.openURL('https://www.cdc.gov/healthyweight/assessing/body_composition/index.html')}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.buttonPrimary, textAlign: 'center', textDecorationLine: 'underline' }}>
+                      CDC – Body Composition Basics
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => Linking.openURL('https://pmc.ncbi.nlm.nih.gov/articles/PMC5384668/')}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.buttonPrimary, textAlign: 'center', textDecorationLine: 'underline' }}>
+                      National Library of Medicine – Body Composition Measurement Techniques
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Body Fat Progress Section */}
         <View style={styles.progressSection}>
@@ -618,7 +832,7 @@ const DashboardScreen = () => {
                 }}>
                   {new Date(progressHistory[progressHistory.length - 1].timestamp).toLocaleDateString()} {new Date(progressHistory[progressHistory.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Text>
-                {/* Show the latest analysis rationale from progress_history if available */}
+                                {/* Show the latest analysis rationale from progress_history if available */}
                 {progressHistory[progressHistory.length - 1]?.analysis && (
                   <View style={{
                     marginTop: 16,
@@ -637,8 +851,32 @@ const DashboardScreen = () => {
                     <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
                       {progressHistory[progressHistory.length - 1].analysis}
                     </Text>
-        </View>
-      )}
+                  </View>
+                )}
+                
+                {/* About these ranges button - placed right after AI Rationale */}
+                <TouchableOpacity 
+                  style={{
+                    marginTop: 16,
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    borderRadius: 20,
+                    paddingVertical: 8,
+                    paddingHorizontal: 16,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                  }}
+                  onPress={() => setBodyFatRangesModalVisible(true)}
+                >
+                  <Text style={{
+                    color: colors.white,
+                    fontSize: 14,
+                    fontWeight: '600',
+                    textAlign: 'center',
+                  }}>
+                    About these ranges
+                  </Text>
+                </TouchableOpacity>
+                
                 {/* Optionally, also show analysis_body_fat if you want, below the rationale */}
                 {latestScan?.analysis_body_fat && (
                   <View style={{
@@ -655,7 +893,7 @@ const DashboardScreen = () => {
                     <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
                       {latestScan.analysis_body_fat}
                     </Text>
-          </View>
+                  </View>
                 )}
               </LinearGradient>
             </RNAnimated.View>

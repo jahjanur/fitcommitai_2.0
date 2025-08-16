@@ -90,15 +90,16 @@ const DietPlanScreen = () => {
         end={{ x: 1, y: 0 }}
         style={styles.headerGradient}
       >
-        <Text style={styles.headerTitle}>Diet Plan</Text>
+        <Text style={styles.headerTitle}>AI After Photo</Text>
       </LinearGradient>
       <View style={{ flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', paddingTop: 100 }}>
         <Animated.View style={{ transform: [{ scale: pulseAnim }], marginBottom: 24 }}>
           <Ionicons name="lock-closed" size={64} color={colors.buttonPrimary} />
         </Animated.View>
-        <Text style={styles.comingSoonHeadline}>AI-Powered Diet Plans Are Almost Here!</Text>
+        <Text style={styles.comingSoonHeadline}>AI After Photo Is Almost Here!</Text>
         <Text style={styles.comingSoonDescription}>
-          Get ready for a revolution in nutrition! Soon, you’ll unlock meal plans crafted just for you. Our smart AI will analyze your body fat, height, weight, and goals to deliver delicious, science-backed nutrition—tailored to your journey. Your next level starts soon!
+          Get ready to see your future self! Soon, you will unlock the most powerful motivation tool in fitness: a personalized AI After Photo based on your body fat, program, and goals.
+          {'\n\n'}Our AI will project your transformation and adapt it as you commit to your plan, giving you a clear and realistic vision of your progress before it even happens.
         </Text>
         <View style={styles.countdownContainer}>
           <Ionicons name="time-outline" size={22} color={colors.buttonPrimary} style={{ marginRight: 6 }} />

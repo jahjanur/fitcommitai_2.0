@@ -293,6 +293,9 @@ const ProgressTrackerScreen = () => {
           <Text style={styles.chartPlaceholderText}>Chart will appear here</Text>
         </View>
       )}
+      <Text style={styles.disclaimerText}>
+        This is an AI-based visual estimate for educational and fitness purposes only. It is not a medical device or diagnosis, and accuracy can vary.
+      </Text>
     </View>
   );
 
@@ -644,6 +647,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text.secondary,
     marginTop: 10,
+  },
+  disclaimerText: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: 12,
+    marginHorizontal: 20,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
 });
 
