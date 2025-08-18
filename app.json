@@ -2,19 +2,20 @@
   "expo": {
     "name": "FitCommit",
     "slug": "FitCommit",
-    "version": "1.0.2",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
+      "image": "./assets/splashscreen_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#6B73FF"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mmur3.FitCommitMobileApp",
-      "buildNumber": "4",
+      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -33,12 +34,12 @@
     "plugins": [
       "expo-font"
     ],
+    "scheme": "fitcommit",
     "extra": {
       "eas": {
-        "projectId": "701e745a-04a0-4644-8cb2-861dcbac0ee5"
+        "projectId": "103198c4-16a7-4e73-b5d1-210dc4df97cb"
       }
     },
-    "owner": "mmur3",
-    "scheme": "fitcommit"
+    "owner": "thecybertwins"
   }
 }
