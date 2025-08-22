@@ -781,7 +781,7 @@ const UploadScreen = () => {
           }}
         >
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate('Dashboard', { screen: 'Dashboard' })}
             style={{ position: 'absolute', left: 20, top: Platform.OS === 'ios' ? 60 : 45, zIndex: 2, padding: 10 }}
           >
             <Ionicons name="arrow-back" size={28} color={colors.white} />

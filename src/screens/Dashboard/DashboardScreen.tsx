@@ -431,9 +431,7 @@ const DashboardScreen = () => {
             top: -15,
           }}
         >
-          {/* BMI Card (always shown) */}
-          <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 }}>
-            {/* Info Icon */}
+          <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, minHeight: 148 }}>
             <TouchableOpacity
               style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
               onPress={() => setBmiInfoVisible(true)}
@@ -461,17 +459,15 @@ const DashboardScreen = () => {
               colors={[colors.primary, colors.buttonPrimary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={{ padding: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 20 }}
+              style={{ padding: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 20, height: 148 }}
             >
               {bmiIcon}
-              <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 16, marginBottom: 4, letterSpacing: 1 }}>BMI</Text>
+              <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 14, marginBottom: 4, letterSpacing: 1, textAlign: 'center' }}>Body Mass Index</Text>
               <RNAnimated.Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 32, letterSpacing: 1 }}>{profile?.bmi_bmi ?? '--'}</RNAnimated.Text>
             </LinearGradient>
           </RNAnimated.View>
-          {/* TDEE Card (only if available and at least one scan) */}
           {progressHistory.length > 0 && profile?.tdee_tdee && (
-            <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.buttonPrimary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16 }}>
-              {/* Info Icon */}
+            <RNAnimated.View style={{ flex: 1, borderRadius: 20, overflow: 'visible', elevation: 8, shadowColor: colors.buttonPrimary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 16, minHeight: 148 }}>
               <TouchableOpacity
                 style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
                 onPress={() => setTdeeInfoVisible(true)}
@@ -499,10 +495,10 @@ const DashboardScreen = () => {
                 colors={[colors.buttonPrimary, colors.primary]}
                 start={{ x: 1, y: 0 }}
                 end={{ x: 0, y: 1 }}
-                style={{ padding: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 20 }}
+                style={{ padding: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 20, height: 148 }}
               >
                 {tdeeIcon}
-                <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 16, marginBottom: 4, letterSpacing: 1 }}>TDEE</Text>
+                <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 14, marginBottom: 4, letterSpacing: 1, textAlign: 'center' }}>Maintenance Calories</Text>
                 <RNAnimated.Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 32, letterSpacing: 1 }}>{profile?.tdee_tdee}</RNAnimated.Text>
               </LinearGradient>
             </RNAnimated.View>
@@ -512,39 +508,33 @@ const DashboardScreen = () => {
         <Modal visible={bmiInfoVisible} transparent animationType="fade" onRequestClose={() => setBmiInfoVisible(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
             <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '82%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
-              {/* Exit Icon Top Right */}
               <TouchableOpacity onPress={() => setBmiInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
               </TouchableOpacity>
               <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is BMI?</Text>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is Body Mass Index (BMI)?</Text>
                 <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
                 <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 14, lineHeight: 22 }}>
                   Your Body Mass Index (BMI) gives you a quick look at your weight relative to your height, helping to categorize if you're underweight, normal, overweight, or obese. It's a useful screening tool, but remember it doesn't directly measure body fat.
                 </Text>
-                {/* BMI Ranges with color - modern, minimal pills */}
                 <View style={{ width: '100%', marginTop: 6, alignItems: 'center' }}>
                   <Text style={{ fontWeight: 'bold', color: colors.primary, fontSize: 15, marginBottom: 10, textAlign: 'center' }}>BMI Ranges:</Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-                    {/* Underweight */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
                       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#4F8EF7', marginRight: 7 }} />
                       <Text style={{ color: '#4F8EF7', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Underweight</Text>
                       <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'< 18.5'}</Text>
                     </View>
-                    {/* Normal Weight */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
                       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#3DC47E', marginRight: 7 }} />
                       <Text style={{ color: '#3DC47E', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Normal</Text>
                       <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'18.5 - 24.9'}</Text>
                     </View>
-                    {/* Overweight */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginRight: 6, marginBottom: 6 }}>
                       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#FFA726', marginRight: 7 }} />
                       <Text style={{ color: '#FFA726', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Overweight</Text>
                       <Text style={{ color: colors.text.secondary, fontSize: 13 }}>{'25.0 - 29.9'}</Text>
                     </View>
-                    {/* Obese */}
                     <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F4F6F8', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, marginBottom: 6 }}>
                       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#F44336', marginRight: 7 }} />
                       <Text style={{ color: '#F44336', fontWeight: '600', fontSize: 14, marginRight: 4 }}>Obese</Text>
@@ -560,12 +550,11 @@ const DashboardScreen = () => {
         <Modal visible={tdeeInfoVisible} transparent animationType="fade" onRequestClose={() => setTdeeInfoVisible(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
             <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '82%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
-              {/* Exit Icon Top Right */}
               <TouchableOpacity onPress={() => setTdeeInfoVisible(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
               </TouchableOpacity>
               <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is TDEE?</Text>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What are Maintenance Calories (TDEE)?</Text>
                 <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
                 <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
                   TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It is calculated based on your Basal Metabolic Rate (BMR) and your activity level, and helps guide nutrition and fitness planning.
@@ -1054,20 +1043,7 @@ const DashboardScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.homeActionButton}
-            onPress={() => navigation.navigate('Diet')}
-        >
-          <LinearGradient
-            colors={[colors.darkBlue, colors.primary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.homeActionButtonGradient}
-          >
-            <Ionicons name="restaurant-outline" size={24} color={colors.white} />
-            <Text style={styles.homeActionButtonText}>View Diet Plan</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+
 
         <TouchableOpacity 
           style={styles.homeActionButton}

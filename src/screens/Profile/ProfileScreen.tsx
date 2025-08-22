@@ -10,6 +10,7 @@ import {
   Alert,
   Switch,
   Linking,
+  Share,
   Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -215,7 +216,7 @@ const ProfileScreen = () => {
       <Text style={styles.sectionTitle}>About & Help</Text>
       <TouchableOpacity 
         style={styles.actionButton} 
-        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+        onPress={() => Linking.openURL('itms-apps://itunes.apple.com/app/id6748652177?action=write-review')}
       >
         <Ionicons name="star-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Rate on App Store</Text>
@@ -223,7 +224,15 @@ const ProfileScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.actionButton} 
-        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+        onPress={async () => {
+          try {
+            await Share.share({
+              message: 'Check out AI Body Fat % by FitCommit on the App Store:\nhttps://apps.apple.com/ca/app/ai-body-fat-by-fitcommit/id6748652177',
+              url: 'https://apps.apple.com/ca/app/ai-body-fat-by-fitcommit/id6748652177',
+              title: 'AI Body Fat % by FitCommit',
+            });
+          } catch (e) {}
+        }}
       >
         <Ionicons name="share-social-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Share with Friends</Text>

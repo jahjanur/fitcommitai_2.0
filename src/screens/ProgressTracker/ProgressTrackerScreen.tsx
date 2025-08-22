@@ -158,6 +158,7 @@ const ProgressTrackerScreen = () => {
               <Text style={styles.modalBodyFat}>{selectedScan.analysis_body_fat != null ? `${selectedScan.analysis_body_fat}%` : 'N/A'}</Text>
               <Text style={styles.modalLabel}>Analysis Rationale</Text>
               <Text style={styles.modalRationale}>{selectedScan.analysis_rationale || 'N/A'}</Text>
+              {/* 
               <View style={styles.modalMetricsRow}>
                 <View style={styles.modalMetricCard}>
                   <Text style={styles.modalMetricLabel}>BMI</Text>
@@ -168,6 +169,7 @@ const ProgressTrackerScreen = () => {
                   <Text style={styles.modalMetricValue}>{selectedScan.tdee ?? 'N/A'}</Text>
                 </View>
               </View>
+              */}
               <Text style={styles.modalDate}>{formatScanDate(selectedScan.scanned_at, true)}</Text>
             </ScrollView>
           )}
@@ -220,20 +222,18 @@ const ProgressTrackerScreen = () => {
         </View>
       </View>
       <View style={styles.metricCard}>
-        {/* Info Icon */}
         <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setBmiInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
         </TouchableOpacity>
-        <Text style={styles.metricLabel}>Latest BMI</Text>
+        <Text style={styles.metricLabel}>Body Mass Index</Text>
         <Text style={styles.metricValue}>{profile?.bmi_bmi ?? '--'}</Text>
       </View>
       <View style={styles.metricCard}>
-        {/* Info Icon */}
         <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setTdeeInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
         </TouchableOpacity>
-        <Text style={styles.metricLabel}>Latest TDEE</Text>
-        <Text style={styles.metricValue}>{profile?.tdee_tdee ?? '--'}</Text>
+        <Text style={[styles.metricLabel, { textAlign: 'center' }]}>Maintenance{"\n"}Calories</Text>
+        <Text style={[styles.metricValue, { fontSize: 18, textAlign: 'center' }]}>{profile?.tdee_tdee ?? '--'}</Text>
       </View>
     </View>
   );
@@ -391,7 +391,7 @@ const ProgressTrackerScreen = () => {
               <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
             </TouchableOpacity>
             <View style={infoModalContentStyle}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Latest BMI</Text>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Body Mass Index (BMI)</Text>
               <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
               <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
                 BMI (Body Mass Index) is a value derived from your height and weight. It helps categorize your weight status, but does not directly measure body fat.
@@ -408,7 +408,7 @@ const ProgressTrackerScreen = () => {
               <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
             </TouchableOpacity>
             <View style={infoModalContentStyle}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Latest TDEE</Text>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Maintenance Calories (TDEE)</Text>
               <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
               <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
                 TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It helps guide your nutrition and fitness planning.

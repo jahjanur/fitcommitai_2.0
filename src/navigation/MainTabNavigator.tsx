@@ -92,8 +92,6 @@ const MainTabNavigator = () => {
           let iconComponent: React.ReactNode;
           if (route.name === 'Dashboard') {
             iconComponent = <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
-          } else if (route.name === 'AfterPhoto') {
-            iconComponent = <Ionicons name={focused ? 'camera' : 'camera-outline'} size={28} color={focused ? colors.buttonPrimary : colors.text.secondary} />;
           } else if (route.name === 'Upload') {
             iconComponent = null; // Center button uses custom button
           } else if (route.name === 'Progress') {
@@ -138,6 +136,15 @@ const MainTabNavigator = () => {
       })}
     >
       <Tab.Screen 
+        name="Upload" 
+        component={UploadScreen} // This should open the upload flow
+        options={{
+          tabBarLabel: '',
+          tabBarButton: (props) => <HomeTabBarButton {...props} />, // Prominent center button
+          tabBarIcon: ({ focused }) => null,
+        }}
+      />
+      <Tab.Screen 
         name="Dashboard" 
         component={DashboardScreen}
         options={{
@@ -145,25 +152,6 @@ const MainTabNavigator = () => {
           tabBarIcon: ({ focused }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={focused ? colors.buttonPrimary : colors.text.secondary} />
           ),
-        }}
-      />
-      <Tab.Screen 
-        name="AfterPhoto" 
-        component={DietPlanScreen}
-        options={{
-          tabBarLabel: 'After Photo',
-          tabBarIcon: ({ focused }) => (
-            <Ionicons name={focused ? 'camera' : 'camera-outline'} size={28} color={focused ? colors.buttonPrimary : colors.text.secondary} />
-          ),
-        }}
-      />
-      <Tab.Screen 
-        name="Upload" 
-        component={UploadScreen} // This should open the upload flow
-        options={{
-          tabBarLabel: '',
-          tabBarButton: (props) => <HomeTabBarButton {...props} />, // Prominent center button
-          tabBarIcon: ({ focused }) => null,
         }}
       />
       <Tab.Screen 
@@ -192,7 +180,6 @@ const MainTabNavigator = () => {
 
 const styles = StyleSheet.create({
   homeTabButton: {
-    top: -30,
     justifyContent: 'center',
     alignItems: 'center',
     width: 60,
