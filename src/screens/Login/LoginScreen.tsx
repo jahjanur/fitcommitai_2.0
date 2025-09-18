@@ -71,11 +71,12 @@ const LoginScreen = () => {
       >
         <View style={styles.headerContent}>
           <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <Text style={styles.subtitle}>Your progress is waiting for you.</Text>
         </View>
       </LinearGradient>
 
-      <View style={styles.form}>
+      <View style={styles.formWrapper}>
+        <View style={styles.form}>
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
@@ -115,7 +116,7 @@ const LoginScreen = () => {
         </View>
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Sign In</Text>
+          <Text style={styles.loginButtonText}>Sign In and Continue Progress</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -123,9 +124,10 @@ const LoginScreen = () => {
           onPress={() => navigation.navigate('Signup')}
         >
           <Text style={styles.signupLinkText}>
-            Don't have an account? <Text style={styles.signupText}>Sign Up</Text>
+            New here? <Text style={styles.signupText}>Sign Up</Text>
           </Text>
         </TouchableOpacity>
+        </View>
       </View>
 
       <Modal
@@ -153,16 +155,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerGradient: {
-    height: 180,
+    height: 220,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     justifyContent: 'flex-end',
-    paddingBottom: 20,
+    paddingBottom: 28,
     shadowColor: colors.darkBlue,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 10,
+    overflow: 'hidden',
   },
   headerContent: {
     paddingHorizontal: 20,
@@ -192,8 +195,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,
-    marginTop: -40,
+    marginTop: 0,
     marginHorizontal: 20,
+  },
+  formWrapper: {
+    flex: 1,
+    justifyContent: 'center',
   },
   inputContainer: {
     marginBottom: 20,

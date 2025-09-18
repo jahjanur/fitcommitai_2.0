@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.mmur3.FitCommitMobileApp'
+    namespace 'com.fitcommitai.fitcommit'
     defaultConfig {
-        applicationId 'com.mmur3.FitCommitMobileApp'
+        applicationId 'com.fitcommitai.fitcommit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

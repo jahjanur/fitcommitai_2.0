@@ -204,9 +204,16 @@ const SignupScreen = () => {
         end={{ x: 1, y: 0 }}
         style={styles.headerGradient}
       >
+        {/* Decorative accents for a modern look */}
+        <View style={styles.headerAccentCircle} />
+        <View style={styles.headerAccentCircle2} />
+        
         <View style={styles.header}>
-          <Text style={styles.title}>Create Your Profile</Text>
-          <Text style={styles.subtitle}>Let's get to know you better</Text>
+          <View style={styles.headerHeroCard}>
+            <Text style={styles.title}>Set Up Your Profile</Text>
+            <Text style={styles.subtitle}>We’ll use your details to create accurate scans, a personalized diet plan, and progress insights just for you.</Text>
+            <View style={styles.headerDivider} />
+          </View>
         </View>
       </LinearGradient>
 
@@ -423,19 +430,38 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerGradient: {
-    height: 180,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    height: 220,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     justifyContent: 'flex-end',
-    paddingBottom: 20,
+    paddingBottom: 24,
     shadowColor: colors.darkBlue,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.28,
+    shadowRadius: 18,
+    elevation: 10,
+    overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 20,
+    paddingBottom: 6,
+  },
+  headerHeroCard: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    marginTop: 12,
+    borderRadius: 1,
   },
   title: {
     ...typography.h2,
@@ -446,7 +472,28 @@ const styles = StyleSheet.create({
     ...typography.body1,
     color: colors.white,
     opacity: 0.8,
+    lineHeight: 20,
   } as TextStyle,
+  headerAccentCircle: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    right: -60,
+    top: -40,
+    transform: [{ rotate: '15deg' }],
+  },
+  headerAccentCircle2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    left: -120,
+    top: -100,
+    transform: [{ rotate: '-10deg' }],
+  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',

@@ -15,6 +15,7 @@ import { ReactNode, isValidElement } from 'react';
 import DashboardScreen from '../screens/Dashboard/DashboardScreen';
 import PlaceholderScreen from '../screens/PlaceholderScreen';
 import ChartHistoryScreen from '../screens/ChartHistory/ChartHistoryScreen';
+import DietPlanScreen from '../screens/DietPlan/DietPlanScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -194,11 +195,11 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Progress"
-        component={ChartHistoryScreen}
+        name="Diet"
+        component={DietPlanScreen}
         options={{
-          tabBarLabel: 'Progress',
-          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} color={color} size={size} />,
+          tabBarLabel: 'Diet',
+          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => <Ionicons name={focused ? "restaurant" : "restaurant-outline"} color={color} size={size} />,
         }}
       />
       {/* Middle Scan/Upload Button */}
@@ -211,11 +212,11 @@ const TabNavigator = () => {
          }}
       />
       <Tab.Screen
-        name="Diet"
-        component={PlaceholderScreen}
+        name="Progress"
+        component={ChartHistoryScreen}
         options={{
-          tabBarLabel: 'Diet',
-          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => <Ionicons name={focused ? "restaurant" : "restaurant-outline"} color={color} size={size} />,
+          tabBarLabel: 'Progress',
+          tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => <Ionicons name={focused ? "stats-chart" : "stats-chart-outline"} color={color} size={size} />,
         }}
       />
        <Tab.Screen
@@ -273,7 +274,7 @@ const styles = StyleSheet.create({
      backgroundColor: colors.primary,
      justifyContent: 'center',
      alignItems: 'center',
-     marginBottom: Platform.OS === 'ios' ? 20 : 0,
+     marginBottom: Platform.OS === 'ios' ? 40 : 30,
      ...Platform.select({
       ios: {
         shadowColor: colors.primary,

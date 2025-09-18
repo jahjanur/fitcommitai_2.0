@@ -47,10 +47,8 @@ public class AppDelegate: ExpoAppDelegate {
     continue userActivity: NSUserActivity,
     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
   ) -> Bool {
-    if super.application(application, continue: userActivity, restorationHandler: restorationHandler) {
-      return true
-    }
-    return RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
   }
 }
 

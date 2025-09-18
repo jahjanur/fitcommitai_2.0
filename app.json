@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "FitCommit",
+    "name": "FitCommit - AI Body Fat Scan",
     "slug": "FitCommit",
-    "version": "1.0.1",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,8 +14,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mmur3.FitCommitMobileApp",
-      "buildNumber": "3",
+      "bundleIdentifier": "com.fitcommitai.fitcommit",
+      "buildNumber": "9",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.mmur3.FitCommitMobileApp"
+      "package": "com.fitcommitai.fitcommit"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +40,6 @@
         "projectId": "103198c4-16a7-4e73-b5d1-210dc4df97cb"
       }
     },
-    "owner": "thecybertwins"
+    "owner": "mur3"
   }
 }

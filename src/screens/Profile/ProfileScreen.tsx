@@ -121,13 +121,13 @@ const ProfileScreen = () => {
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={24} color={colors.error} />
-        <Text style={[styles.actionButtonText, { color: colors.error }]}>Logout</Text>
+        <Ionicons name="log-out-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={[styles.actionButtonText]}>Logout</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.actionButton} onPress={handleDeleteAccount}>
         <Ionicons name="trash-outline" size={24} color={colors.error} />
-        <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete My Account</Text>
+        <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete Account</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       {showChangePasswordForm && (
@@ -169,19 +169,20 @@ const ProfileScreen = () => {
           thumbColor={colors.white}
         />
       </View>
+      <Text style={{ color: colors.text.secondary, fontSize: 13, marginTop: 6 }}>Turn app updates and reminders on or off.</Text>
       {/* Removed Sound Effects and Vacation Mode */}
     </View>
   );
 
   const renderLegalInfo = () => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Legal & Info</Text>
+      <Text style={styles.sectionTitle}>Help & Legal</Text>
       <TouchableOpacity 
         style={styles.actionButton} 
         onPress={() => Linking.openURL('https://www.fitcommit.ai/terms')}
       >
         <Ionicons name="document-text-outline" size={24} color={colors.buttonPrimary} />
-        <Text style={styles.actionButtonText}>Terms & Conditions</Text>
+        <Text style={styles.actionButtonText}>Terms and Conditions</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
       <TouchableOpacity 
@@ -205,7 +206,55 @@ const ProfileScreen = () => {
         onPress={() => setMethodologyModalVisible(true)}
       >
         <Ionicons name="analytics-outline" size={24} color={colors.buttonPrimary} />
-        <Text style={styles.actionButtonText}>Methodology</Text>
+        <Text style={styles.actionButtonText}>How FitCommit Works</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
+        <Ionicons name="help-circle-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Help Center</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
+        <Ionicons name="mail-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Contact Support</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={async () => {
+          try {
+            await Share.share({
+              message: 'Check out AI Body Fat % by FitCommit on the App Store:\nhttps://apps.apple.com/ca/app/ai-body-fat-by-fitcommit/id6748652177',
+              url: 'https://apps.apple.com/ca/app/ai-body-fat-by-fitcommit/id6748652177',
+              title: 'AI Body Fat % by FitCommit',
+            });
+          } catch (e) {}
+        }}
+      >
+        <Ionicons name="share-social-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Share with Friends</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('itms-apps://itunes.apple.com/app/id6748652177?action=write-review')}
+      >
+        <Ionicons name="star-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Rate FitCommit</Text>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+      >
+        <Ionicons name="chatbubbles-outline" size={24} color={colors.buttonPrimary} />
+        <Text style={styles.actionButtonText}>Support & Feedback</Text>
         <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </TouchableOpacity>
     </View>
@@ -263,7 +312,6 @@ const ProfileScreen = () => {
       {renderAccountActions()}
       {renderSettings()}
       {renderLegalInfo()}
-      {renderAboutHelp()}
       <Text style={styles.versionText}>FitCommit™ v1.0 – Designed by MobileFitCommit</Text>
       
       {/* Methodology Modal */}

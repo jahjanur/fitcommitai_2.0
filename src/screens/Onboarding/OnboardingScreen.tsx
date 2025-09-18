@@ -34,13 +34,13 @@ const OnboardingScreen = () => {
   const slides = [
     {
       illustration: Illustration,
-      title: 'Understand Your Body',
-      subtitle: 'Change your life by slowly adding new healthy habits and sticking to them.',
+      title: 'Transform with AI',
+      subtitle: 'Get accurate body composition scans, a personalized diet plan, and motivating AI after photos. Track your progress, eat right, and stay committed.',
     },
     {
       illustration: Illustration2,
-      title: 'Track Your Progress',
-      subtitle: 'Each scan gets you closer to your transformation. See how your body changes over time and stay motivated.',
+      title: 'Transform with AI',
+      subtitle: 'Get accurate body composition scans, a personalized diet plan, and motivating AI after photos. Track your progress, eat right, and stay committed.',
     },
   ];
 
@@ -81,8 +81,8 @@ const OnboardingScreen = () => {
           ))}
         </ScrollView>
 
-        <Text style={styles.title}>{currentSlide.title}</Text>
-        <Text style={styles.subtitle}>{currentSlide.subtitle}</Text>
+        <Text style={styles.title}>Transform with AI</Text>
+        <Text style={styles.subtitle}>Get accurate body composition scans, a personalized diet plan, and motivating AI after photos. Track your progress, eat right, and stay committed.</Text>
 
         {/* Page indicator dots */}
         <View style={styles.paginationDots}>
@@ -103,7 +103,7 @@ const OnboardingScreen = () => {
           onPress={() => navigation.navigate('Signup')}
         >
           <Ionicons name="mail-outline" size={20} color={colors.buttonPrimary} />
-          <Text style={styles.emailButtonText}>Continue with E-mail</Text>
+          <Text style={styles.emailButtonText}>Continue with Email</Text>
         </TouchableOpacity>
 
         {/* Social Login Buttons */}

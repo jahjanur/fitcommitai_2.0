@@ -66,7 +66,7 @@ const RoleSelectionScreen = () => {
         <View style={styles.content}>
           <Image source={fitCommitLogo} style={styles.logo} />
           <Text style={styles.title}>Choose Your Role</Text>
-          <Text style={styles.subtitle}>Select how you want to use FitCommit</Text>
+          <Text style={styles.subtitle}>We’ll personalize your FitCommit experience based on how you plan to use it.</Text>
           <View style={styles.roleContainer}>
             <Animated.View style={{ transform: [{ scale: clientScale }] }}>
               <TouchableOpacity
@@ -80,7 +80,7 @@ const RoleSelectionScreen = () => {
               >
                 <Text style={[styles.roleTitle, selectedRole === 'Client' && styles.clientRoleTitleSelected]}>Client</Text>
                 <Text style={[styles.roleDescription, selectedRole === 'Client' && styles.clientRoleDescriptionSelected]}>
-                  Track your fitness journey and get personalized recommendations
+                  Track your body with AI scans, get a personalized diet plan, and stay motivated with future after photos.
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -95,7 +95,7 @@ const RoleSelectionScreen = () => {
                   <Feather name="lock" size={18} color="#aaa" style={{ marginLeft: 6 }} />
                 </View>
                 <Text style={styles.roleDescription}>
-                  Manage clients and create personalized plans
+                  Track client progress with AI scans, give better nutrition guidance, and keep them engaged with after photos.
                 </Text>
                 <View style={styles.comingSoonBadge}>
                   <Text style={styles.comingSoonText}>Coming Soon</Text>
@@ -109,6 +109,13 @@ const RoleSelectionScreen = () => {
             disabled={!selectedRole}
           >
             <Text style={styles.continueButtonText}>Continue</Text>
+          </TouchableOpacity>
+          {/* Add direct login access */}
+          <TouchableOpacity
+            style={styles.loginLink}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.loginLinkText}>Already have an account? <Text style={styles.loginText}>Log in</Text></Text>
           </TouchableOpacity>
         </View>
         <Modal
@@ -264,6 +271,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  loginLink: {
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  loginLinkText: {
+    color: '#fff',
+    opacity: 0.9,
+  },
+  loginText: {
+    color: '#fff',
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,

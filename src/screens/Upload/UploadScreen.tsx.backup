@@ -24,7 +24,6 @@ import { supabase } from '../../lib/supabase';
 import { getBottomSpace } from 'react-native-iphone-x-helper';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { calculateTDEEWithDefaults } from '../../utils/tdeeCalculator';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackNavigationProp } from '../../types/navigation';
 
@@ -82,7 +81,19 @@ function calculateBMR_KatchMcArdle(weightKg: number, bodyFatPercent: number) {
   const lbm = calculateLBM(weightKg, bodyFatPercent);
   return 370 + (21.6 * lbm);
 }
-// TDEE calculation now uses unified calculator from utils/tdeeCalculator.ts
+function getTDEEMultiplier(activityLevel: string) {
+  switch (activityLevel) {
+    case 'Sedentary (office job)': return 1.2;
+    case 'Light Exercise (1-2 days/week)': return 1.375;
+    case 'Moderate Exercise (3-5 days/week)': return 1.55;
+    case 'Heavy Exercise (6-7 days/week)': return 1.725;
+    case 'Athlete (2x per day)': return 1.9;
+    default: return 1.2;
+  }
+}
+function calculateTDEE(bmr: number, activityLevel: string) {
+  return bmr * getTDEEMultiplier(activityLevel);
+}
 
 const UploadScreen = () => {
   // Upload flow state
@@ -100,7 +111,7 @@ const UploadScreen = () => {
   const [uploadThumbnails, setUploadThumbnails] = useState<{ front?: string; side?: string; back?: string }>({});
   const progressAnim = useRef(new Animated.Value(0.33)).current;
   const [scanCooldown, setScanCooldown] = useState<number>(0);
-  const [cooldownInterval, setCooldownInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [cooldownInterval, setCooldownInterval] = useState<NodeJS.Timeout | null>(null);
   const [overrideScanLock, setOverrideScanLock] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<string | null>(null);
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -157,11 +168,11 @@ const UploadScreen = () => {
         const lastScanDate = new Date(lastScanTime);
         const now = new Date();
         const diff = Math.floor((now.getTime() - lastScanDate.getTime()) / 1000); // seconds
-        const cooldown = Math.max(0, 7 * 24 * 60 * 60 - diff); // 7 days in seconds
+        const cooldown = Math.max(0, 3 * 24 * 60 * 60 - diff); // 3 days in seconds
         setScanCooldown(cooldown);
         if (cooldownInterval) clearInterval(cooldownInterval);
         if (cooldown > 0) {
-          const interval: ReturnType<typeof setInterval> = setInterval(() => {
+          const interval = setInterval(() => {
             setScanCooldown((prev) => {
               if (prev <= 1) {
                 clearInterval(interval);
@@ -198,7 +209,7 @@ const UploadScreen = () => {
     if (uri.endsWith('.png')) mime = 'image/png';
     else if (uri.endsWith('.jpg') || uri.endsWith('.jpeg')) mime = 'image/jpeg';
     // Read as base64
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' as any });
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
     return `data:${mime};base64,${base64}`;
   };
 
@@ -354,7 +365,7 @@ const UploadScreen = () => {
           if (profile.weight_kg && bodyFatNum && profile.activity_level) {
             const bodyFatPercent = bodyFatNum / 100;
             bmr = calculateBMR_KatchMcArdle(profile.weight_kg, bodyFatPercent);
-            tdee = calculateTDEEWithDefaults(profile.weight_kg, profile.activity_level, 'none', bodyFatPercent * 100);
+            tdee = calculateTDEE(bmr, profile.activity_level);
           }
 
           // Save to body_scans
@@ -463,7 +474,7 @@ const UploadScreen = () => {
 
   // Tip animation for analyzing
   useEffect(() => {
-    let tipInterval: ReturnType<typeof setInterval>;
+    let tipInterval: NodeJS.Timeout;
     if (currentStep === 'analyzing') {
       Animated.loop(
         Animated.sequence([
@@ -482,7 +493,7 @@ const UploadScreen = () => {
         });
       }, 5000);
       return () => {
-        if (tipInterval) clearInterval(tipInterval);
+        clearInterval(tipInterval);
         pulseAnim.stopAnimation();
         pulseAnim.setValue(1);
         tipFadeAnim.setValue(0);
@@ -719,13 +730,13 @@ const UploadScreen = () => {
             }}
           >
             <Text style={{ color: colors.buttonPrimary, fontWeight: 'bold', fontSize: 22, marginBottom: 10, textAlign: 'center' }}>
-              Next scan recommended in:
+              Next recommended scan in
             </Text>
             <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 36, marginBottom: 12, textAlign: 'center', letterSpacing: 1 }}>
               {formatCooldown(scanCooldown)}
             </Text>
             <Text style={{ color: colors.text.secondary, fontSize: 15, textAlign: 'center', marginBottom: 18, opacity: 0.95 }}>
-              For the most accurate results, scans should be taken once every 7 days. Daily changes are mostly water, not true fat loss. Waiting makes your progress clear and motivating, but you can scan anyway if you’d like.
+              Body fat measurements taken less than 3 days apart often show little visible change. We recommend waiting.
             </Text>
             <TouchableOpacity
               style={{

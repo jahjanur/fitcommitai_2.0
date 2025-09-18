@@ -90,7 +90,9 @@ const ProgressTrackerScreen = () => {
     .reverse()
     .map(date => {
       const d = new Date(date);
-      return `${d.getMonth() + 1}/${d.getDate()}`;
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                         'July', 'August', 'September', 'October', 'November', 'December'];
+      return `${monthNames[d.getMonth()]} ${d.getDate()}`;
     });
   const chartDataArr = scans
     .map(scan => scan.analysis_body_fat)
@@ -205,20 +207,16 @@ const ProgressTrackerScreen = () => {
         </TouchableOpacity>
         <Text style={styles.metricLabel}>Overall Change</Text>
         <View style={{ alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-            {changeIcon}
-            <Text style={[styles.metricValue, { color: changeColor, fontSize: 22 }]}> 
-              {absoluteChange != null ? `${parseFloat(absoluteChange) > 0 ? '+' : ''}${absoluteChange}%` : '--%'}
-            </Text>
-            <Text style={{ color: changeColor, fontSize: 14, marginLeft: 4 }}>(Absolute)</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {changeIcon}
-            <Text style={[styles.metricValue, { color: changeColor, fontSize: 18 }]}> 
-              {relativeChange != null ? `${parseFloat(relativeChange) > 0 ? '+' : ''}${relativeChange}%` : '--%'}
-            </Text>
-            <Text style={{ color: changeColor, fontSize: 14, marginLeft: 4 }}>(Relative)</Text>
-          </View>
+          <Text style={[styles.metricValue, { color: changeColor, fontSize: 16, textAlign: 'center', lineHeight: 22 }]}> 
+            {absoluteChange != null && relativeChange != null ? 
+              (parseFloat(absoluteChange) < 0 ? 
+                'Down since first scan' : 
+                parseFloat(absoluteChange) > 0 ? 
+                'Up since first scan' : 
+                'No change since first scan'
+              ) : 'No data yet'
+            }
+          </Text>
         </View>
       </View>
       <View style={styles.metricCard}>
@@ -226,14 +224,14 @@ const ProgressTrackerScreen = () => {
           <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
         </TouchableOpacity>
         <Text style={styles.metricLabel}>Body Mass Index</Text>
-        <Text style={styles.metricValue}>{profile?.bmi_bmi ?? '--'}</Text>
+        <Text style={styles.metricValue}>{profile?.bmi_bmi ? Math.round(parseFloat(profile.bmi_bmi)).toString() : '--'}</Text>
       </View>
       <View style={styles.metricCard}>
         <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setTdeeInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.metricLabel, { textAlign: 'center' }]}>Maintenance{"\n"}Calories</Text>
-        <Text style={[styles.metricValue, { fontSize: 18, textAlign: 'center' }]}>{profile?.tdee_tdee ?? '--'}</Text>
+        <Text style={[styles.metricLabel, { textAlign: 'center' }]}>TDEE</Text>
+        <Text style={[styles.metricValue, { fontSize: 18, textAlign: 'center' }]}>{profile?.tdee_tdee ? Math.round(parseFloat(profile.tdee_tdee)).toString() : '--'}</Text>
       </View>
     </View>
   );
@@ -256,7 +254,7 @@ const ProgressTrackerScreen = () => {
           }}
           width={Dimensions.get('window').width - 80}
           height={180}
-          yAxisSuffix="%"
+          yAxisSuffix=""
           yAxisInterval={1}
           chartConfig={{
             backgroundColor: colors.white,
@@ -394,7 +392,7 @@ const ProgressTrackerScreen = () => {
               <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Body Mass Index (BMI)</Text>
               <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
               <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
-                BMI (Body Mass Index) is a value derived from your height and weight. It helps categorize your weight status, but does not directly measure body fat.
+                BMI is a standard health measure used worldwide to classify weight relative to height. It has limits, but combined with your AI scan it helps build a fuller picture of your health.
               </Text>
             </View>
           </View>
@@ -408,10 +406,10 @@ const ProgressTrackerScreen = () => {
               <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
             </TouchableOpacity>
             <View style={infoModalContentStyle}>
-              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Maintenance Calories (TDEE)</Text>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>TDEE</Text>
               <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
               <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
-                TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It helps guide your nutrition and fitness planning.
+                This is your estimated daily calorie needs. Eating less supports fat loss. Eating more supports muscle gain. Your personalized diet plan is based on this number.
               </Text>
             </View>
           </View>

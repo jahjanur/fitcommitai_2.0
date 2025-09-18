@@ -35,6 +35,7 @@ import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop, Circle } fr
 import { getBottomSpace } from 'react-native-iphone-x-helper';
 import { v4 as uuidv4 } from 'uuid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calculateTDEEWithDefaults } from '../../utils/tdeeCalculator';
 
 // Define CustomTabBarButtonProps interface
 interface CustomTabBarButtonProps {
@@ -63,6 +64,7 @@ interface UserProfile {
   weight_kg: number;
   bmi_bmi?: string;
   tdee_tdee?: string;
+  activity_level?: string;
 }
 
 const DashboardScreen = () => {
@@ -100,6 +102,8 @@ const DashboardScreen = () => {
   const [bodyFatRangesModalVisible, setBodyFatRangesModalVisible] = useState(false);
   const [menCategoriesExpanded, setMenCategoriesExpanded] = useState(false);
   const [womenCategoriesExpanded, setWomenCategoriesExpanded] = useState(false);
+  const [activityLevel, setActivityLevel] = useState('bmr');
+  const [exerciseFrequency, setExerciseFrequency] = useState('none');
 
   const chartConfig = {
     backgroundGradientFrom: colors.white,
@@ -125,28 +129,38 @@ const DashboardScreen = () => {
   function calculateBMI(weightKg: number, heightCm: number): string | null {
     const heightM = heightCm / 100;
     if (!weightKg || !heightM) return null;
-    return (weightKg / (heightM * heightM)).toFixed(2);
+    return Math.round(weightKg / (heightM * heightM)).toString();
   }
-  function calculateBMR(weightKg: number, heightCm: number, age: number, gender: string): number {
-    if (gender === 'male') {
-      return 10 * weightKg + 6.25 * heightCm - 5 * age + 5;
-    } else {
-      return 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
-    }
-  }
-  function calculateTDEE(bmr: number, activityLevel: string): string {
-    const multipliers: { [key: string]: number } = {
-      sedentary: 1.2,
-      'lightly active': 1.375,
-      'moderately active': 1.55,
-      'very active': 1.725,
-      'extra active': 1.9,
-    };
-    return (bmr * (multipliers[activityLevel] ?? 1.2)).toFixed(0);
-  }
+  
+  // TDEE calculation now uses unified calculator from utils/tdeeCalculator.ts
 
   const bmiIcon = <Ionicons name="body" size={32} color={colors.white} style={{ textShadowColor: colors.buttonPrimary, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8, marginBottom: 6 }} />;
   const tdeeIcon = <Ionicons name="flame" size={32} color={colors.white} style={{ textShadowColor: colors.primary, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8, marginBottom: 6 }} />;
+
+  // Helper: show measured X days ago (stable reference)
+  const getMeasuredAgoText = React.useCallback((dateStr: string): string => {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const oneMinute = 60 * 1000;
+      const oneHour = 60 * oneMinute;
+      const oneDay = 24 * oneHour;
+      if (diffMs < oneMinute) return 'Measured just now';
+      if (diffMs < oneHour) {
+        const mins = Math.floor(diffMs / oneMinute);
+        return `Measured ${mins} minute${mins === 1 ? '' : 's'} ago`;
+      }
+      if (diffMs < oneDay) {
+        const hours = Math.floor(diffMs / oneHour);
+        return `Measured ${hours} hour${hours === 1 ? '' : 's'} ago`;
+      }
+      const days = Math.floor(diffMs / oneDay);
+      return `Measured ${days} day${days === 1 ? '' : 's'} ago`;
+    } catch {
+      return '';
+    }
+  }, []);
 
   const borderAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -184,24 +198,43 @@ const DashboardScreen = () => {
       if (user) {
         const { data, error, status } = await supabase
           .from('profiles')
-              .select('id, email, name, age, gender, height_cm, weight_kg, bmi_bmi, tdee_tdee')
+              .select('id, email, name, age, gender, height_cm, weight_kg, bmi_bmi, tdee_tdee, activity_level')
           .eq('id', user.id)
           .single();
             if (error && status !== 406) throw error;
         if (data) {
           setProfile(data as UserProfile);
+          // Set activity level from profile data
+          if (data.activity_level) {
+            setActivityLevel(data.activity_level);
+          }
               await fetchProgressHistory(data.id);
-              // Calculate and update BMI/TDEE if missing
-              if ((data.bmi_bmi == null || data.tdee_tdee == null) && data.weight_kg && data.height_cm && data.age && data.gender) {
+              
+              // Fetch latest scan data for accurate TDEE calculation
+              const { data: scanData, error: scanError } = await supabase
+                .from('body_scans')
+                .select('analysis_body_fat, tdee, scanned_at')
+                .eq('user_id', user.id)
+                .order('scanned_at', { ascending: false })
+                .limit(1)
+                .single();
+              
+              if (!scanError && scanData) {
+                setLatestScan(scanData);
+              }
+              
+              // Always recalculate BMI/TDEE to ensure consistency with DietPlan
+              if (data.weight_kg && data.height_cm && data.age && data.gender) {
                 const bmi = calculateBMI(data.weight_kg, data.height_cm);
-                const bmr = calculateBMR(data.weight_kg, data.height_cm, data.age, data.gender);
-                const tdee = calculateTDEE(bmr, 'sedentary');
+                // Use latest scan body fat percentage, fallback to 15% if no scan data
+                const bodyFatPercentage = scanData?.analysis_body_fat || 15;
+                const tdee = calculateTDEEWithDefaults(data.weight_kg, data.activity_level || 'bmr', exerciseFrequency, bodyFatPercentage);
                 if (bmi && tdee) {
                   await supabase
                     .from('profiles')
-                    .update({ bmi_bmi: bmi.toString(), tdee_tdee: tdee.toString() })
+                    .update({ bmi_bmi: bmi.toString(), tdee_tdee: Math.round(tdee).toString() })
                     .eq('id', data.id);
-                  setProfile((prev) => prev ? { ...prev, bmi_bmi: bmi.toString(), tdee_tdee: tdee.toString() } : prev);
+                  setProfile((prev) => prev ? { ...prev, bmi_bmi: bmi.toString(), tdee_tdee: Math.round(tdee).toString() } : prev);
                 }
               }
             } else {
@@ -220,6 +253,137 @@ const DashboardScreen = () => {
     fetchProfile();
     }
   }, [isFocused]);
+
+  // Update TDEE when activity level or exercise frequency changes
+  useEffect(() => {
+    const updateTDEE = async () => {
+      if (!profile?.weight_kg || !profile?.id) return;
+      
+      try {
+        // If Diet Plan has an exact saved TDEE, always prefer it and skip recomputation
+        const savedTDEE = await AsyncStorage.getItem('dietPlan_tdee');
+        if (savedTDEE) {
+          const exact = savedTDEE;
+          console.log('Using exact Diet Plan TDEE on change:', exact);
+          await supabase
+            .from('profiles')
+            .update({ tdee_tdee: exact })
+            .eq('id', profile.id);
+          setProfile(prev => prev ? { ...prev, tdee_tdee: exact } : prev);
+          return;
+        }
+
+        // Otherwise compute as fallback
+        const bodyFatPercentage = latestScan?.analysis_body_fat || 15;
+        const newTDEE = calculateTDEEWithDefaults(profile.weight_kg, activityLevel, exerciseFrequency, bodyFatPercentage);
+        const rounded = Math.round(newTDEE).toString();
+        
+        console.log('Updating TDEE (fallback compute):', {
+          weight: profile.weight_kg,
+          bodyFat: bodyFatPercentage,
+          activityLevel,
+          exerciseFrequency,
+          newTDEE: rounded
+        });
+        
+        await supabase
+          .from('profiles')
+          .update({ tdee_tdee: rounded })
+          .eq('id', profile.id);
+        setProfile(prev => prev ? { ...prev, tdee_tdee: rounded } : prev);
+      } catch (error) {
+        console.error('Error updating TDEE:', error);
+      }
+    };
+    
+    // Only update if we have the necessary data
+    if (profile?.weight_kg && profile?.id && (latestScan || activityLevel !== 'bmr' || exerciseFrequency !== 'none')) {
+      updateTDEE();
+    }
+  }, [activityLevel, exerciseFrequency, profile?.weight_kg, profile?.id, latestScan]);
+
+  // Sync TDEE directly from Diet Plan page
+  useEffect(() => {
+    const syncFromDietPlan = async () => {
+      try {
+        const savedActivityLevel = await AsyncStorage.getItem('dietPlan_activityLevel');
+        const savedExerciseFrequency = await AsyncStorage.getItem('dietPlan_exerciseFrequency');
+        const savedTDEE = await AsyncStorage.getItem('dietPlan_tdee');
+        
+        console.log('Syncing from Diet Plan:', { 
+          savedActivityLevel, 
+          savedExerciseFrequency, 
+          savedTDEE: savedTDEE ? parseFloat(savedTDEE) : null 
+        });
+        
+        // Update activity level and exercise frequency
+        if (savedActivityLevel && savedActivityLevel !== activityLevel) {
+          setActivityLevel(savedActivityLevel);
+        }
+        if (savedExerciseFrequency && savedExerciseFrequency !== exerciseFrequency) {
+          setExerciseFrequency(savedExerciseFrequency);
+        }
+        
+        // Use TDEE directly from Diet Plan if available
+        if (savedTDEE && profile?.id) {
+          const tdeeValue = parseFloat(savedTDEE);
+          console.log('Using TDEE from Diet Plan:', tdeeValue);
+          
+          // Update in database
+          await supabase
+            .from('profiles')
+            .update({ tdee_tdee: Math.round(tdeeValue).toString() })
+            .eq('id', profile.id);
+          
+          // Update local state
+          setProfile(prev => prev ? { ...prev, tdee_tdee: Math.round(tdeeValue).toString() } : prev);
+        }
+      } catch (error) {
+        console.error('Error syncing from Diet Plan:', error);
+      }
+    };
+    
+    syncFromDietPlan();
+  }, [isFocused, profile?.id]);
+
+  // Fallback TDEE calculation if no Diet Plan TDEE is available
+  useEffect(() => {
+    if (isFocused && profile?.weight_kg && profile?.id) {
+      const checkAndCalculateTDEE = async () => {
+        try {
+          const savedTDEE = await AsyncStorage.getItem('dietPlan_tdee');
+          
+          // Only calculate if no TDEE from Diet Plan is available
+          if (!savedTDEE) {
+            const bodyFatPercentage = latestScan?.analysis_body_fat || 15;
+            const newTDEE = calculateTDEEWithDefaults(profile.weight_kg, activityLevel, exerciseFrequency, bodyFatPercentage);
+            
+            console.log('Fallback TDEE calculation:', {
+              weight: profile.weight_kg,
+              bodyFat: bodyFatPercentage,
+              activityLevel,
+              exerciseFrequency,
+              newTDEE: Math.round(newTDEE)
+            });
+            
+            // Update in database
+            await supabase
+              .from('profiles')
+              .update({ tdee_tdee: Math.round(newTDEE).toString() })
+              .eq('id', profile.id);
+            
+            // Update local state
+            setProfile(prev => prev ? { ...prev, tdee_tdee: Math.round(newTDEE).toString() } : prev);
+          }
+        } catch (error) {
+          console.error('Error in fallback TDEE calculation:', error);
+        }
+      };
+      
+      // Small delay to ensure all data is loaded
+      setTimeout(checkAndCalculateTDEE, 500);
+    }
+  }, [isFocused, profile?.weight_kg, profile?.id, activityLevel, exerciseFrequency, latestScan]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -498,8 +662,8 @@ const DashboardScreen = () => {
                 style={{ padding: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 20, height: 148 }}
               >
                 {tdeeIcon}
-                <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 14, marginBottom: 4, letterSpacing: 1, textAlign: 'center' }}>Maintenance Calories</Text>
-                <RNAnimated.Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 32, letterSpacing: 1 }}>{profile?.tdee_tdee}</RNAnimated.Text>
+                <Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 14, marginBottom: 4, letterSpacing: 1, textAlign: 'center' }}>TDEE</Text>
+                <RNAnimated.Text style={{ color: colors.white, fontWeight: 'bold', fontSize: 32, letterSpacing: 1 }}>{profile?.tdee_tdee ? Math.round(parseFloat(profile.tdee_tdee)).toString() : '--'}</RNAnimated.Text>
               </LinearGradient>
             </RNAnimated.View>
           )}
@@ -512,10 +676,10 @@ const DashboardScreen = () => {
                 <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
               </TouchableOpacity>
               <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What is Body Mass Index (BMI)?</Text>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>Body Mass Index (BMI)</Text>
                 <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
                 <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 14, lineHeight: 22 }}>
-                  Your Body Mass Index (BMI) gives you a quick look at your weight relative to your height, helping to categorize if you're underweight, normal, overweight, or obese. It's a useful screening tool, but remember it doesn't directly measure body fat.
+                  BMI is a standard health measure used worldwide to classify weight relative to height. It has limits, but combined with your AI scan it helps build a fuller picture of your health.
                 </Text>
                 <View style={{ width: '100%', marginTop: 6, alignItems: 'center' }}>
                   <Text style={{ fontWeight: 'bold', color: colors.primary, fontSize: 15, marginBottom: 10, textAlign: 'center' }}>BMI Ranges:</Text>
@@ -554,10 +718,10 @@ const DashboardScreen = () => {
                 <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
               </TouchableOpacity>
               <View style={{ padding: 26, width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>What are Maintenance Calories (TDEE)?</Text>
+                <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, marginTop: 8 }}>TDEE</Text>
                 <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 18, opacity: 0.18 }} />
                 <Text style={{ fontSize: 16, color: colors.text.primary, textAlign: 'center', marginBottom: 6, lineHeight: 22 }}>
-                  TDEE (Total Daily Energy Expenditure) is the estimated number of calories you burn per day, including all activities. It is calculated based on your Basal Metabolic Rate (BMR) and your activity level, and helps guide nutrition and fitness planning.
+                  This is your estimated daily calorie needs. Eating less supports fat loss. Eating more supports muscle gain. Your personalized diet plan is based on this number.
                 </Text>
               </View>
             </View>
@@ -819,7 +983,7 @@ const DashboardScreen = () => {
                   fontSize: 13,
                   marginTop: 4,
                 }}>
-                  {new Date(progressHistory[progressHistory.length - 1].timestamp).toLocaleDateString()} {new Date(progressHistory[progressHistory.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {getMeasuredAgoText(progressHistory[progressHistory.length - 1].timestamp)}
                 </Text>
                                 {/* Show the latest analysis rationale from progress_history if available */}
                 {progressHistory[progressHistory.length - 1]?.analysis && (
@@ -866,24 +1030,6 @@ const DashboardScreen = () => {
                   </Text>
                 </TouchableOpacity>
                 
-                {/* Optionally, also show analysis_body_fat if you want, below the rationale */}
-                {latestScan?.analysis_body_fat && (
-                  <View style={{
-                    marginTop: 10,
-                    backgroundColor: 'rgba(255,255,255,0.92)',
-                    borderRadius: 14,
-                    padding: 12,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 6,
-                    elevation: 4,
-                  }}>
-                    <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
-                      {latestScan.analysis_body_fat}
-                    </Text>
-                  </View>
-                )}
               </LinearGradient>
             </RNAnimated.View>
           )}
