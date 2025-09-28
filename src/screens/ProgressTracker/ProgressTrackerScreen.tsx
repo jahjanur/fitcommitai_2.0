@@ -126,7 +126,7 @@ const ProgressTrackerScreen = () => {
               />
               <View style={{ flex: 1, marginLeft: 14 }}>
                 <Text style={styles.scanCardDate}>{formatScanDate(scan.scanned_at)}</Text>
-                <Text style={styles.scanCardBodyFat}>{scan.analysis_body_fat != null ? `${scan.analysis_body_fat}%` : 'N/A'}</Text>
+                <Text style={styles.scanCardBodyFat}>{scan.analysis_body_fat != null ? `${Math.round(scan.analysis_body_fat)}%` : 'N/A'}</Text>
               </View>
               <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
             </View>
@@ -157,7 +157,7 @@ const ProgressTrackerScreen = () => {
                   />
                 ))}
               </View>
-              <Text style={styles.modalBodyFat}>{selectedScan.analysis_body_fat != null ? `${selectedScan.analysis_body_fat}%` : 'N/A'}</Text>
+              <Text style={styles.modalBodyFat}>{selectedScan.analysis_body_fat != null ? `${Math.round(selectedScan.analysis_body_fat)}%` : 'N/A'}</Text>
               <Text style={styles.modalLabel}>Analysis Rationale</Text>
               <Text style={styles.modalRationale}>{selectedScan.analysis_rationale || 'N/A'}</Text>
               {/* 
@@ -198,23 +198,15 @@ const ProgressTrackerScreen = () => {
           <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
         </TouchableOpacity>
         <Text style={styles.metricLabel}>Latest Body Fat</Text>
-        <Text style={styles.metricValue}>{latestBodyFat != null ? `${latestBodyFat}%` : '--%'}</Text>
+        <Text style={styles.metricValue}>{latestBodyFat != null ? `${Math.round(latestBodyFat)}%` : '--%'}</Text>
       </View>
       <View style={styles.metricCard}>
-        {/* Info Icon */}
-        <TouchableOpacity style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }} onPress={() => setChangeInfoVisible(true)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.buttonPrimary} />
-        </TouchableOpacity>
         <Text style={styles.metricLabel}>Overall Change</Text>
         <View style={{ alignItems: 'center' }}>
           <Text style={[styles.metricValue, { color: changeColor, fontSize: 16, textAlign: 'center', lineHeight: 22 }]}> 
-            {absoluteChange != null && relativeChange != null ? 
-              (parseFloat(absoluteChange) < 0 ? 
-                'Down since first scan' : 
-                parseFloat(absoluteChange) > 0 ? 
-                'Up since first scan' : 
-                'No change since first scan'
-              ) : 'No data yet'
+            {absoluteChange != null ? 
+              `${parseFloat(absoluteChange) > 0 ? '+' : ''}${absoluteChange}%` : 
+              'No data yet'
             }
           </Text>
         </View>

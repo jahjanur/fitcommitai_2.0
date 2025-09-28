@@ -312,7 +312,7 @@ const ProfileScreen = () => {
       {renderAccountActions()}
       {renderSettings()}
       {renderLegalInfo()}
-      <Text style={styles.versionText}>FitCommit™ v1.0 – Designed by MobileFitCommit</Text>
+      <Text style={styles.versionText}>FitCommit™ v1.0 </Text>
       
       {/* Methodology Modal */}
       <Modal visible={methodologyModalVisible} transparent animationType="fade" onRequestClose={() => setMethodologyModalVisible(false)}>

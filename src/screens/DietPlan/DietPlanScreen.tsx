@@ -226,7 +226,7 @@ const DietPlanScreen = () => {
       id: 'deficit-15',
       name: '15% Gentle (Easy)',
       percentage: 15,
-      description: 'Eat about 15% fewer calories than your daily burn. Slow and steady fat loss with excellent muscle preservation. Duration: 3+ months',
+      description: 'Eat about 15% fewer calories than your daily burn. Slow and steady fat loss with excellent muscle preservation.',
       proteinMultiplier: 2.3,
       fatPercentage: 25,
       duration: '3+ months',
@@ -236,7 +236,7 @@ const DietPlanScreen = () => {
       id: 'deficit-20',
       name: '20% Moderate (Easy)',
       percentage: 20,
-      description: 'Eat about 20% fewer calories than your daily burn. Steady results with minimal hunger or fatigue. Duration: 2 to 3 months',
+      description: 'Eat about 20% fewer calories than your daily burn. Steady results with minimal hunger or fatigue.',
       proteinMultiplier: 2.5,
       fatPercentage: 25,
       duration: '2-3 months',
@@ -246,7 +246,7 @@ const DietPlanScreen = () => {
       id: 'deficit-25',
       name: '25% Effective (Moderate)',
       percentage: 25,
-      description: 'Eat about 25% fewer calories than your daily burn. The sweet spot for most people. Duration: 6 to 10 weeks',
+      description: 'Eat about 25% fewer calories than your daily burn. The sweet spot for most people.',
       proteinMultiplier: 2.7,
       fatPercentage: 27,
       duration: '6-10 weeks',
@@ -256,7 +256,7 @@ const DietPlanScreen = () => {
       id: 'deficit-30',
       name: '30% Fast (Hard)',
       percentage: 30,
-      description: 'Eat about 30% fewer calories than your daily burn. Rapid results with higher hunger and fatigue. Duration: 4 to 6 weeks',
+      description: 'Eat about 30% fewer calories than your daily burn. Rapid results with higher hunger and fatigue.',
       proteinMultiplier: 2.9,
       fatPercentage: 28,
       duration: '4-6 weeks',
@@ -266,7 +266,7 @@ const DietPlanScreen = () => {
       id: 'deficit-35',
       name: '35% Intense (Very Hard)',
       percentage: 35,
-      description: 'Eat about 35% fewer calories than your daily burn. Very fast results requiring strong willpower. Duration: 2 to 3 weeks',
+      description: 'Eat about 35% fewer calories than your daily burn. Very fast results requiring strong willpower.',
       proteinMultiplier: 3.1,
       fatPercentage: 30,
       duration: '2-3 weeks',
@@ -276,7 +276,7 @@ const DietPlanScreen = () => {
       id: 'deficit-40',
       name: '40% Extreme (Extreme)',
       percentage: 40,
-      description: 'Eat about 40% fewer calories than your daily burn. Maximum speed, highest risk of muscle loss. Not recommended unless short term and supervised. Duration: 1 to 2 weeks',
+      description: 'Eat about 40% fewer calories than your daily burn. Maximum speed, highest risk of muscle loss. Not recommended unless short term and supervised.',
       proteinMultiplier: 3.2,
       fatPercentage: 30,
       duration: '1-2 weeks',
@@ -302,7 +302,7 @@ const DietPlanScreen = () => {
       id: 'gain-5',
       name: '5% Slow and Steady (Easy)',
       percentage: 5,
-      description: 'Minimal fat gain with gradual, quality muscle growth. Best for long term consistency. Duration: 6+ months',
+      description: 'Minimal fat gain with gradual, quality muscle growth. Best for long term consistency.',
       proteinMultiplier: 2.3,
       fatPercentage: 30,
       duration: '6+ months',
@@ -312,7 +312,7 @@ const DietPlanScreen = () => {
       id: 'gain-10',
       name: '10% Balanced Growth (Moderate)',
       percentage: 10,
-      description: 'Steady muscle gain with controlled fat increase. A good balance of speed and sustainability. Duration: 3 to 6 months',
+      description: 'Steady muscle gain with controlled fat increase. A good balance of speed and sustainability.',
       proteinMultiplier: 2.3,
       fatPercentage: 30,
       duration: '3-6 months',
@@ -322,7 +322,7 @@ const DietPlanScreen = () => {
       id: 'gain-15',
       name: '15% Fast Gains (Hard)',
       percentage: 15,
-      description: 'Rapid muscle growth with more noticeable fat gain. Best for short term progress. Duration: 2 to 4 months',
+      description: 'Rapid muscle growth with more noticeable fat gain. Best for short term progress.',
       proteinMultiplier: 2.3,
       fatPercentage: 30,
       duration: '2-4 months',
@@ -923,14 +923,6 @@ const DietPlanScreen = () => {
         {renderUserStats()}
         {renderGoalSelection()}
         {renderCurrentPlan()}
-        
-        <TouchableOpacity 
-          style={styles.customizeButton} 
-          onPress={() => Alert.alert('Coming Soon', 'Customize your meal plan')}
-        >
-          <Ionicons name="settings-outline" size={20} color={colors.white} />
-          <Text style={styles.customizeButtonText}>Build My Plan</Text>
-        </TouchableOpacity>
       </ScrollView>
       {renderActivityModal()}
       {renderExerciseModal()}
@@ -1098,27 +1090,6 @@ const styles = StyleSheet.create({
   macroLabel: {
     fontSize: 10,
     color: colors.text.secondary,
-  },
-  customizeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.buttonPrimary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    marginTop: 20,
-    marginBottom: 100,
-    shadowColor: colors.buttonPrimary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  customizeButtonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
   },
   modalOverlay: {
     flex: 1,

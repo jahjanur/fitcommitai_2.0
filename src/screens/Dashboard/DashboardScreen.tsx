@@ -941,93 +941,244 @@ const DashboardScreen = () => {
 
         {/* Body Fat Progress Section */}
         <View style={styles.progressSection}>
-          {/* Latest Body Fat Card with Animated Gradient */}
+          {/* Latest Body Fat Card with Enhanced Modern Design */}
           {progressHistory.length > 0 && (
             <RNAnimated.View style={styles.latestCard}>
+              {/* Animated Background with Multiple Layers */}
+              <Animated.View style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: 20,
+                opacity: borderAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.3, 0.6]
+                }),
+              }}>
+                <LinearGradient
+                  colors={[colors.primary, colors.buttonPrimary, colors.darkBlue, colors.primary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ flex: 1, borderRadius: 20 }}
+                />
+              </Animated.View>
+              
+              {/* Main Content Layer */}
               <LinearGradient
                 colors={[colors.primary, colors.buttonPrimary, colors.primary]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
-                  padding: 28,
+                  padding: 32,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: 0.95,
+                  borderRadius: 20,
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                <Text style={{
-                  color: colors.white,
-                  fontSize: 18,
-                  fontWeight: '600',
-                  letterSpacing: 1,
-                  marginBottom: 6,
-                  textShadowColor: 'rgba(0,0,0,0.12)',
-                  textShadowOffset: { width: 0, height: 2 },
-                  textShadowRadius: 4,
+                {/* Floating Decorative Elements */}
+                <View style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  opacity: 0.6,
+                }} />
+                <View style={{
+                  position: 'absolute',
+                  bottom: 30,
+                  left: 20,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  opacity: 0.4,
+                }} />
+                
+                {/* Header with Icon */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 8,
                 }}>
-                  Latest Body Fat
-                </Text>
-                <RNAnimated.Text style={{
-                  color: colors.white,
-                  fontSize: 44,
-                  fontWeight: 'bold',
-                  letterSpacing: 1,
-                  textShadowColor: 'rgba(0,0,0,0.18)',
-                  textShadowOffset: { width: 0, height: 3 },
-                  textShadowRadius: 8,
+                  <View style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}>
+                    <Ionicons name="body-outline" size={18} color={colors.white} />
+                  </View>
+                  <Text style={{
+                    color: colors.white,
+                    fontSize: 16,
+                    fontWeight: '600',
+                    letterSpacing: 0.5,
+                    textShadowColor: 'rgba(0,0,0,0.15)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 3,
+                  }}>
+                    Latest Body Fat
+                  </Text>
+                </View>
+
+                {/* Main Percentage Display */}
+                <View style={{
+                  alignItems: 'center',
+                  marginBottom: 12,
                 }}>
-                  {progressHistory[progressHistory.length - 1].body_fat.toFixed(1)}%
-                </RNAnimated.Text>
-                <Text style={{
-                  color: 'rgba(255,255,255,0.8)',
-                  fontSize: 13,
-                  marginTop: 4,
+                  <RNAnimated.Text style={{
+                    color: colors.white,
+                    fontSize: 56,
+                    fontWeight: '800',
+                    letterSpacing: -1,
+                    textShadowColor: 'rgba(0,0,0,0.25)',
+                    textShadowOffset: { width: 0, height: 4 },
+                    textShadowRadius: 12,
+                    lineHeight: 60,
+                  }}>
+                    {Math.round(progressHistory[progressHistory.length - 1].body_fat)}%
+                  </RNAnimated.Text>
+                  
+                  {/* Progress Indicator */}
+                  <View style={{
+                    width: 120,
+                    height: 4,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 2,
+                    marginTop: 8,
+                    overflow: 'hidden',
+                  }}>
+                    <Animated.View style={{
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: 'rgba(255,255,255,0.6)',
+                      borderRadius: 2,
+                      transform: [{
+                        scaleX: borderAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.7, 1]
+                        })
+                      }]
+                    }} />
+                  </View>
+                </View>
+
+                {/* Timestamp with Enhanced Styling */}
+                <View style={{
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 16,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  marginBottom: 16,
                 }}>
-                  {getMeasuredAgoText(progressHistory[progressHistory.length - 1].timestamp)}
-                </Text>
-                                {/* Show the latest analysis rationale from progress_history if available */}
+                  <Text style={{
+                    color: 'rgba(255,255,255,0.9)',
+                    fontSize: 13,
+                    fontWeight: '500',
+                    textAlign: 'center',
+                    letterSpacing: 0.3,
+                  }}>
+                    {getMeasuredAgoText(progressHistory[progressHistory.length - 1].timestamp)}
+                  </Text>
+                </View>
+                {/* AI Rationale Section with Modern Design */}
                 {progressHistory[progressHistory.length - 1]?.analysis && (
                   <View style={{
-                    marginTop: 16,
-                    backgroundColor: 'rgba(255,255,255,0.92)',
-                    borderRadius: 14,
-                    padding: 16,
+                    marginTop: 20,
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: 18,
+                    padding: 20,
                     shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 6,
-                    elevation: 4,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.12,
+                    shadowRadius: 12,
+                    elevation: 8,
+                    borderWidth: 1,
+                    borderColor: 'rgba(255,255,255,0.2)',
                   }}>
-                    <Text style={{ color: colors.text.primary, fontSize: 13, fontWeight: 'bold', marginBottom: 6, textAlign: 'center', letterSpacing: 0.2 }}>
-                      AI Rationale
-                    </Text>
-                    <Text style={{ color: colors.text.primary, fontSize: 15, textAlign: 'center' }}>
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 12,
+                      justifyContent: 'center',
+                    }}>
+                      <View style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: colors.buttonPrimary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 8,
+                      }}>
+                        <Ionicons name="sparkles" size={14} color={colors.white} />
+                      </View>
+                      <Text style={{ 
+                        color: colors.text.primary, 
+                        fontSize: 14, 
+                        fontWeight: '700', 
+                        letterSpacing: 0.5,
+                        textTransform: 'uppercase',
+                      }}>
+                        AI Analysis
+                      </Text>
+                    </View>
+                    <Text style={{ 
+                      color: colors.text.primary, 
+                      fontSize: 15, 
+                      textAlign: 'center',
+                      lineHeight: 22,
+                      fontWeight: '500',
+                    }}>
                       {progressHistory[progressHistory.length - 1].analysis}
                     </Text>
                   </View>
                 )}
                 
-                {/* About these ranges button - placed right after AI Rationale */}
+                {/* Enhanced About Ranges Button */}
                 <TouchableOpacity 
                   style={{
-                    marginTop: 16,
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                    borderRadius: 20,
-                    paddingVertical: 8,
-                    paddingHorizontal: 16,
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.3)',
+                    marginTop: 20,
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 24,
+                    paddingVertical: 12,
+                    paddingHorizontal: 24,
+                    borderWidth: 1.5,
+                    borderColor: 'rgba(255,255,255,0.4)',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 4,
                   }}
                   onPress={() => setBodyFatRangesModalVisible(true)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={{
-                    color: colors.white,
-                    fontSize: 14,
-                    fontWeight: '600',
-                    textAlign: 'center',
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}>
-                    About these ranges
-                  </Text>
+                    <Ionicons name="information-circle-outline" size={16} color={colors.white} style={{ marginRight: 8 }} />
+                    <Text style={{
+                      color: colors.white,
+                      fontSize: 15,
+                      fontWeight: '600',
+                      letterSpacing: 0.3,
+                    }}>
+                      About Body Fat Ranges
+                    </Text>
+                  </View>
                 </TouchableOpacity>
                 
               </LinearGradient>
@@ -1145,7 +1296,7 @@ const DashboardScreen = () => {
                             alignItems: 'center',
                           }}
                         >
-                          <Text style={{ fontWeight: 'bold', color: colors.text.primary, fontSize: 16 }}>{tooltipPos.value.toFixed(1)}%</Text>
+                          <Text style={{ fontWeight: 'bold', color: colors.text.primary, fontSize: 16 }}>{Math.round(tooltipPos.value)}%</Text>
                           <Text style={{ color: colors.text.secondary, fontSize: 12 }}>{tooltipPos.date}</Text>
         </View>
                       </>
@@ -1562,15 +1713,17 @@ const styles = StyleSheet.create({
     tintColor: colors.text.secondary,
   },
   latestCard: {
-    borderRadius: 20,
-    marginBottom: 10, // keep bottom margin tight
+    borderRadius: 24,
+    marginBottom: 16,
     overflow: 'hidden',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
     backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   metricsRow: {
     flexDirection: 'row',
