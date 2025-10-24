@@ -276,7 +276,7 @@ const UploadScreen = () => {
         weightKgs: profile.weight_kg,
       };
       // Send as JSON
-      const uploadResponse = await fetch('https://n8n.srv841363.hstgr.cloud/webhook/analyze-img-urls', {
+      const uploadResponse = await fetch('https://ml.fitcommit.ai/analyze_img_urls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

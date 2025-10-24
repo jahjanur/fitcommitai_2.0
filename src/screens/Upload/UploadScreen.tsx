@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
   RefreshControl,
+  TextInput,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,10 +34,18 @@ const MaleDefaultImage = require('../../../assets/MaleDefaultImage.png');
 const FemaleDefaultProfilePic = require('../../../assets/femaleDefaultProfgile pic.png');
 
 type ScanStep = 'front' | 'side' | 'back' | 'analyzing' | 'results';
+type UploadMode = 'analyze' | 'after_photo';
 
 interface AnalysisResponse {
   bodyFat: string;
   rationale: string;
+}
+
+interface AfterPhotoResponse {
+  after_photo_url: string;
+  transformation_prompt: string;
+  success: boolean;
+  message: string;
 }
 interface UserProfile {
   id: string;
@@ -84,14 +93,18 @@ function calculateBMR_KatchMcArdle(weightKg: number, bodyFatPercent: number) {
 }
 // TDEE calculation now uses unified calculator from utils/tdeeCalculator.ts
 
-const UploadScreen = () => {
+const SmartAnalysisScreen = () => {
   // Upload flow state
   const [currentStep, setCurrentStep] = useState<ScanStep>('front');
+  const [uploadMode, setUploadMode] = useState<UploadMode>('analyze');
   const [images, setImages] = useState<{ front?: string; side?: string; back?: string }>({});
+  const [afterPhotoImage, setAfterPhotoImage] = useState<string | null>(null);
   const [loadingImage, setLoadingImage] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingAfterPhoto, setIsGeneratingAfterPhoto] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResponse | null>(null);
+  const [afterPhotoResult, setAfterPhotoResult] = useState<AfterPhotoResponse | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const tipFadeAnim = useRef(new Animated.Value(0)).current;
@@ -103,7 +116,24 @@ const UploadScreen = () => {
   const [cooldownInterval, setCooldownInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [overrideScanLock, setOverrideScanLock] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<string | null>(null);
+  
+  // After photo form state - only duration is manual, rest auto-populated
+  const [durationWeeks, setDurationWeeks] = useState<string>('8');
+  const [latestBodyFat, setLatestBodyFat] = useState<number | null>(null);
+  
+  // Image viewing modal state
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [selectedImageLabel, setSelectedImageLabel] = useState<string>('');
+  
   const navigation = useNavigation<RootStackNavigationProp>();
+
+  // Handle image viewing
+  const handleImagePress = (imageUri: string, label: string) => {
+    setSelectedImageUri(imageUri);
+    setSelectedImageLabel(label);
+    setImageModalVisible(true);
+  };
 
   // Fetch user profile (copy logic as needed)
   useEffect(() => {
@@ -118,12 +148,14 @@ const UploadScreen = () => {
             .eq('id', user.id)
             .single();
           if (error && status !== 406) throw error;
-          if (data) setProfile(data as UserProfile);
+          if (data) {
+            setProfile(data as UserProfile);
+          }
           
-          // Fetch the last scan time for cooldown
+          // Fetch the last scan time and body fat for cooldown and auto-population
           const { data: lastScanData, error: lastScanError } = await supabase
             .from('body_scans')
-            .select('scanned_at')
+            .select('scanned_at, analysis_body_fat')
             .eq('user_id', user.id)
             .order('scanned_at', { ascending: false })
             .limit(1)
@@ -131,6 +163,9 @@ const UploadScreen = () => {
           
           if (!lastScanError && lastScanData?.scanned_at) {
             setLastScanTime(lastScanData.scanned_at);
+            if (lastScanData.analysis_body_fat) {
+              setLatestBodyFat(lastScanData.analysis_body_fat);
+            }
             console.log('Last scan time loaded:', lastScanData.scanned_at);
           } else {
             console.log('No previous scans found or error:', lastScanError);
@@ -265,7 +300,7 @@ const UploadScreen = () => {
         weightKgs: profile.weight_kg,
       };
       // Send as JSON
-      const uploadResponse = await fetch('https://n8n.srv841363.hstgr.cloud/webhook/analyze-img-urls', {
+      const uploadResponse = await fetch('https://ml.fitcommit.ai/analyze_img_urls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -423,6 +458,49 @@ const UploadScreen = () => {
     }
   };
 
+  const generateAfterPhoto = async (imageUri: string) => {
+    setIsGeneratingAfterPhoto(true);
+    try {
+      if (!profile?.id) throw new Error('User profile not loaded');
+      
+      // Upload the single image
+      const userId = profile.id;
+      const imageUrl = await uploadImageToSupabase(imageUri, `${userId}/after_photo_base.jpg`);
+      
+      // Prepare the payload for after photo generation using auto-populated data
+      const payload = {
+        image_url: imageUrl,
+        body_fat_percent: latestBodyFat || 15, // Use latest body fat or default to 15%
+        weight: profile.weight_kg,
+        gender: profile.gender,
+        duration_weeks: parseInt(durationWeeks),
+        correlation_id: `session_${Date.now()}`
+      };
+      
+      // Send request to after photo generation endpoint
+      const response = await fetch('https://ml.fitcommit.ai/generate_after_photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`After photo generation failed with status: ${response.status} Body: ${errorBody}`);
+      }
+      
+      const result = await response.json();
+      setAfterPhotoResult(result);
+      
+      setIsGeneratingAfterPhoto(false);
+      return true;
+    } catch (error: any) {
+      Alert.alert('Generation Failed', error.message || JSON.stringify(error));
+      setIsGeneratingAfterPhoto(false);
+      return false;
+    }
+  };
+
   const fetchProgressHistory = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -494,6 +572,29 @@ const UploadScreen = () => {
     }
   }, [currentStep, pulseAnim, tipFadeAnim]);
 
+  // Animation for AI Vision results
+  useEffect(() => {
+    if (afterPhotoResult) {
+      // Reset animations
+      tipFadeAnim.setValue(0);
+      pulseAnim.setValue(0.8);
+      
+      // Start entrance animations
+      Animated.sequence([
+        Animated.timing(tipFadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ]).start();
+      
+      // Continuous subtle pulse for the transformation container
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.02, duration: 2000, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        ])
+      ).start();
+    }
+  }, [afterPhotoResult, tipFadeAnim, pulseAnim]);
+
   // Reset upload screen after scan
   useEffect(() => {
     if (currentStep === 'results') {
@@ -505,7 +606,7 @@ const UploadScreen = () => {
   }, [currentStep]);
 
   // Image upload handlers
-  const handleImageUpload = async (type: 'front' | 'side' | 'back') => {
+  const handleImageUpload = async (type: 'front' | 'side' | 'back' | 'after_photo') => {
     try {
       setLoadingImage(true);
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -532,7 +633,13 @@ const UploadScreen = () => {
         return;
       }
       const uri = pickerResult.assets[0].uri;
-      setImages((prev) => ({ ...prev, [type]: uri }));
+      
+      if (type === 'after_photo') {
+        setAfterPhotoImage(uri);
+      } else {
+        setImages((prev) => ({ ...prev, [type]: uri }));
+      }
+      
       setLoadingImage(false);
     } catch (error: any) {
       Alert.alert('Image Picker Error', error.message || JSON.stringify(error));
@@ -687,9 +794,236 @@ const UploadScreen = () => {
     </LinearGradient>
   );
 
+
+  // Modern after photo form component
+  const renderAfterPhotoForm = () => (
+    <ScrollView 
+      contentContainerStyle={styles.modernAfterPhotoContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* AI Vision Results - Show at top when available */}
+      {afterPhotoResult && (
+        <View style={styles.modernResults}>
+          <Animated.View style={[styles.resultsHeader, { opacity: tipFadeAnim }]}>
+            <View style={styles.sparkleIconContainer}>
+              <Ionicons name="sparkles" size={24} color={colors.buttonPrimary} />
+            </View>
+            <Text style={styles.modernResultsTitle}>Your AI Vision</Text>
+            <Text style={styles.resultsSubtitle}>Transformation Complete</Text>
+          </Animated.View>
+          
+          <Animated.View style={[styles.transformationContainer, { transform: [{ scale: pulseAnim }] }]}>
+            <View style={styles.beforeAfterWrapper}>
+              <Animated.View style={[styles.beforeImageContainer, { opacity: tipFadeAnim }]}>
+                <View style={styles.imageLabelContainer}>
+                  <Text style={styles.beforeLabel}>Before</Text>
+                  <View style={styles.labelIndicator} />
+                </View>
+                <TouchableOpacity 
+                  style={styles.imageWrapper}
+                  onPress={() => handleImagePress(afterPhotoImage!, 'Before')}
+                >
+                  <Image source={{ uri: afterPhotoImage! }} style={styles.transformationImage} />
+                  <View style={styles.imageOverlay} />
+                  <View style={styles.imageTapIndicator}>
+                    <Ionicons name="expand" size={16} color={colors.white} />
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+              
+              <Animated.View style={[styles.transformationArrow, { opacity: tipFadeAnim }]}>
+                <View style={styles.arrowBackground}>
+                  <Ionicons name="arrow-forward" size={20} color={colors.white} />
+                </View>
+                <View style={styles.arrowPulse} />
+              </Animated.View>
+              
+              <Animated.View style={[styles.afterImageContainer, { opacity: tipFadeAnim }]}>
+                <View style={styles.imageLabelContainer}>
+                  <Text style={styles.afterLabel}>After</Text>
+                  <View style={[styles.labelIndicator, styles.afterLabelIndicator]} />
+                </View>
+                <TouchableOpacity 
+                  style={styles.imageWrapper}
+                  onPress={() => handleImagePress(afterPhotoResult.after_photo_url, 'After')}
+                >
+                  <Image source={{ uri: afterPhotoResult.after_photo_url }} style={styles.transformationImage} />
+                  <View style={[styles.imageOverlay, styles.afterImageOverlay]} />
+                  <View style={styles.imageTapIndicator}>
+                    <Ionicons name="expand" size={16} color={colors.white} />
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
+          </Animated.View>
+          
+          <Animated.View style={[styles.successMessage, { opacity: tipFadeAnim }]}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.buttonPrimary} />
+            <Text style={styles.successText}>AI transformation generated successfully</Text>
+          </Animated.View>
+        </View>
+      )}
+
+      {/* Main Card */}
+      <View style={styles.modernCard}>
+        {/* Image Upload Section */}
+        <View style={styles.imageUploadSection}>
+          <Text style={styles.sectionTitle}>Upload Your Photo</Text>
+          <TouchableOpacity
+            style={styles.modernImageUploadArea}
+            onPress={() => handleImageUpload('after_photo')}
+          >
+            {afterPhotoImage ? (
+              <Image source={{ uri: afterPhotoImage }} style={styles.modernImagePreview} />
+            ) : (
+              <View style={styles.modernImagePlaceholder}>
+                <View style={styles.uploadIconContainer}>
+                  <Ionicons name="camera" size={28} color={colors.buttonPrimary} />
+                </View>
+                <Text style={styles.uploadText}>Tap to upload</Text>
+                <Text style={styles.uploadSubtext}>Best results with full body photos</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Auto-populated Info Section */}
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>Your Profile Data</Text>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Body Fat</Text>
+              <Text style={styles.infoValue}>
+                {latestBodyFat ? `${latestBodyFat}%` : 'Not available'}
+              </Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Weight</Text>
+              <Text style={styles.infoValue}>
+                {profile?.weight_kg ? `${profile.weight_kg} kg` : 'Not set'}
+              </Text>
+            </View>
+            <View style={styles.infoItem}>
+              <Text style={styles.infoLabel}>Gender</Text>
+              <Text style={styles.infoValue}>
+                {profile?.gender ? profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1) : 'Not set'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Duration Input */}
+        <View style={styles.durationSection}>
+          <Text style={styles.sectionTitle}>Transformation Timeline</Text>
+          <View style={styles.durationInputContainer}>
+            <Text style={styles.durationLabel}>How many weeks of progress?</Text>
+            <View style={styles.durationOptionsContainer}>
+              {[4, 8, 12, 16].map((weeks) => (
+                <TouchableOpacity
+                  key={weeks}
+                  style={[
+                    styles.durationOption,
+                    durationWeeks === weeks.toString() && styles.durationOptionActive
+                  ]}
+                  onPress={() => setDurationWeeks(weeks.toString())}
+                >
+                  <Text style={[
+                    styles.durationOptionText,
+                    durationWeeks === weeks.toString() && styles.durationOptionTextActive
+                  ]}>
+                    {weeks}
+                  </Text>
+                  <Text style={[
+                    styles.durationOptionUnit,
+                    durationWeeks === weeks.toString() && styles.durationOptionUnitActive
+                  ]}>
+                    weeks
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.customDurationContainer}>
+              <Text style={styles.customDurationLabel}>Or enter custom:</Text>
+              <View style={styles.customDurationInputWrapper}>
+                <TextInput
+                  style={styles.customDurationInput}
+                  value={durationWeeks}
+                  onChangeText={setDurationWeeks}
+                  placeholder="8"
+                  keyboardType="numeric"
+                  placeholderTextColor={colors.text.secondary}
+                  textAlign="center"
+                />
+                <Text style={styles.customDurationUnit}>weeks</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Generate Button */}
+        <TouchableOpacity
+          style={[
+            styles.modernGenerateButton,
+            (!afterPhotoImage || !durationWeeks || isGeneratingAfterPhoto) && styles.modernGenerateButtonDisabled
+          ]}
+          onPress={() => afterPhotoImage && generateAfterPhoto(afterPhotoImage)}
+          disabled={!afterPhotoImage || !durationWeeks || isGeneratingAfterPhoto}
+        >
+          {isGeneratingAfterPhoto ? (
+            <ActivityIndicator color={colors.white} size="small" />
+          ) : (
+            <>
+              <Ionicons name="sparkles" size={20} color={colors.white} />
+              <Text style={styles.modernGenerateButtonText}>Generate Vision</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+
+  // Image viewing modal component
+  const renderImageModal = () => (
+    <Modal
+      visible={imageModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setImageModalVisible(false)}
+    >
+      <View style={styles.imageModalOverlay}>
+        <TouchableOpacity 
+          style={styles.imageModalCloseArea}
+          onPress={() => setImageModalVisible(false)}
+        >
+          <View style={styles.imageModalContent}>
+            <View style={styles.imageModalHeader}>
+              <Text style={styles.imageModalTitle}>{selectedImageLabel}</Text>
+              <TouchableOpacity
+                style={styles.imageModalCloseButton}
+                onPress={() => setImageModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.imageModalImageContainer}>
+              <Image 
+                source={{ uri: selectedImageUri! }} 
+                style={styles.imageModalImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </Modal>
+  );
+
   // Main render
   return (
     <>
+      {/* Image Viewing Modal */}
+      {renderImageModal()}
+      
       {/* Countdown Modal with glassmorphism effect */}
       <Modal
         visible={scanCooldown > 0 && !overrideScanLock && (currentStep === 'front' || currentStep === 'side' || currentStep === 'back')}
@@ -725,7 +1059,7 @@ const UploadScreen = () => {
               {formatCooldown(scanCooldown)}
             </Text>
             <Text style={{ color: colors.text.secondary, fontSize: 15, textAlign: 'center', marginBottom: 18, opacity: 0.95 }}>
-              For the most accurate results, scans should be taken once every 7 days. Daily changes are mostly water, not true fat loss. Waiting makes your progress clear and motivating, but you can scan anyway if you’d like.
+              For the most accurate results, scans should be taken once every 7 days. Daily changes are mostly water, not true fat loss. Waiting makes your progress clear and motivating, but you can scan anyway if you'd like.
             </Text>
             <TouchableOpacity
               style={{
@@ -747,9 +1081,10 @@ const UploadScreen = () => {
           </LinearGradient>
         </View>
       </Modal>
+      
       {/* Main content */}
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        {/* Header with title */}
+        {/* Header with mode selector */}
         <LinearGradient
           colors={[colors.darkBlue, colors.primary]}
           start={{ x: 0, y: 0 }}
@@ -762,23 +1097,66 @@ const UploadScreen = () => {
             left: 0,
             borderBottomLeftRadius: 30,
             borderBottomRightRadius: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
             paddingTop: Platform.OS === 'ios' ? 40 : 20,
             zIndex: 1,
             flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 20,
           }}
         >
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Dashboard', { screen: 'Dashboard' })}
-            style={{ position: 'absolute', left: 20, top: Platform.OS === 'ios' ? 60 : 45, zIndex: 2, padding: 10 }}
-          >
-            <Ionicons name="arrow-back" size={28} color={colors.white} />
-          </TouchableOpacity>
-          <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.white }}>Upload Photos</Text>
+          {/* Mode Selector in Header */}
+          <View style={styles.headerModeSelector}>
+            <TouchableOpacity
+              style={[
+                styles.headerModeButton,
+                uploadMode === 'analyze' && styles.headerModeButtonActive
+              ]}
+              onPress={() => setUploadMode('analyze')}
+            >
+              <Ionicons 
+                name="scan" 
+                size={18} 
+                color={uploadMode === 'analyze' ? colors.white : 'rgba(255,255,255,0.8)'} 
+              />
+              <Text style={[
+                styles.headerModeButtonText,
+                uploadMode === 'analyze' && styles.headerModeButtonTextActive
+              ]}>
+                Body Scan
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.headerModeButton,
+                uploadMode === 'after_photo' && styles.headerModeButtonActive
+              ]}
+              onPress={() => setUploadMode('after_photo')}
+            >
+              <Ionicons 
+                name="sparkles" 
+                size={18} 
+                color={uploadMode === 'after_photo' ? colors.white : 'rgba(255,255,255,0.8)'} 
+              />
+              <Text style={[
+                styles.headerModeButtonText,
+                uploadMode === 'after_photo' && styles.headerModeButtonTextActive
+              ]}>
+                AI Vision
+              </Text>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
+        
         <View style={{ flex: 1, paddingTop: 100 }}>
-          {currentStep === 'analyzing' ? renderAnalyzing() : renderUploadStep()}
+          
+          {/* Content based on mode */}
+          {uploadMode === 'analyze' ? (
+            currentStep === 'analyzing' ? renderAnalyzing() : renderUploadStep()
+          ) : (
+            renderAfterPhotoForm()
+          )}
         </View>
       </View>
     </>
@@ -1118,6 +1496,478 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingBottom: getBottomSpace() + 40, // Extra bottom padding for safe area
   },
+  
+  // Header mode selector styles
+  headerModeSelector: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 6,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    gap: 8,
+    minWidth: 100,
+  },
+  headerModeButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  headerModeButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  headerModeButtonTextActive: {
+    color: colors.white,
+    fontWeight: '800',
+  },
+  
+  // Modern after photo styles
+  modernAfterPhotoContainer: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: getBottomSpace() + 100, // Extra padding for navigation
+  },
+  
+  // Main card
+  modernCard: {
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: 28,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  
+  // Section styles
+  imageUploadSection: {
+    marginBottom: 32,
+  },
+  infoSection: {
+    marginBottom: 32,
+  },
+  durationSection: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.buttonPrimary,
+    marginBottom: 16,
+  },
+  
+  // Image upload
+  modernImageUploadArea: {
+    width: '100%',
+    height: 240,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.08)',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  modernImagePreview: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 18,
+  },
+  modernImagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  uploadText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.buttonPrimary,
+    marginBottom: 4,
+  },
+  uploadSubtext: {
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  
+  // Info grid
+  infoGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  infoItem: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text.secondary,
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: colors.buttonPrimary,
+  },
+  
+  // Duration input
+  durationInputContainer: {
+    alignItems: 'center',
+  },
+  durationLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.buttonPrimary,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  
+  // Duration options
+  durationOptionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  durationOption: {
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    minWidth: 70,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  durationOptionActive: {
+    backgroundColor: colors.buttonPrimary,
+    borderColor: colors.buttonPrimary,
+  },
+  durationOptionText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.buttonPrimary,
+  },
+  durationOptionTextActive: {
+    color: colors.white,
+  },
+  durationOptionUnit: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  durationOptionUnitActive: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  
+  // Custom duration
+  customDurationContainer: {
+    alignItems: 'center',
+  },
+  customDurationLabel: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginBottom: 8,
+  },
+  customDurationInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  customDurationInput: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.buttonPrimary,
+    minWidth: 50,
+  },
+  customDurationUnit: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    marginLeft: 8,
+  },
+  
+  // Generate button
+  modernGenerateButton: {
+    backgroundColor: colors.buttonPrimary,
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: colors.buttonPrimary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modernGenerateButtonDisabled: {
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  modernGenerateButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.white,
+  },
+  
+  // Results
+  modernResults: {
+    marginTop: 32,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.08)',
+  },
+  
+  // Results header
+  resultsHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  sparkleIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  modernResultsTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.buttonPrimary,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  resultsSubtitle: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  
+  // Transformation container
+  transformationContainer: {
+    marginBottom: 24,
+  },
+  beforeAfterWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  
+  // Image containers
+  beforeImageContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  afterImageContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  imageLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  beforeLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.secondary,
+  },
+  afterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.buttonPrimary,
+  },
+  labelIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.text.secondary,
+  },
+  afterLabelIndicator: {
+    backgroundColor: colors.buttonPrimary,
+  },
+  
+  // Image styling
+  imageWrapper: {
+    position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  transformationImage: {
+    width: 140,
+    height: 180,
+    resizeMode: 'cover',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  afterImageOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  
+  // Arrow styling
+  transformationArrow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  arrowBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.buttonPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.buttonPrimary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  arrowPulse: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.buttonPrimary,
+    opacity: 0.3,
+  },
+  
+  // Success message
+  successMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  successText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.buttonPrimary,
+  },
+  
+  // Image tap indicator
+  imageTapIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Image modal styles
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalCloseArea: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  imageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: colors.buttonPrimary,
+  },
+  imageModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.white,
+  },
+  imageModalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageModalImageContainer: {
+    flex: 1,
+    minHeight: 400,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalImage: {
+    width: '100%',
+    height: '100%',
+    maxHeight: 500,
+  },
 });
 
-export default UploadScreen; 
+export default SmartAnalysisScreen; 

@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calculateTDEEWithDefaults } from '../../utils/tdeeCalculator';
+import { getBottomSpace } from 'react-native-iphone-x-helper';
 
 interface MacroCalculation {
   calories: number;
@@ -38,6 +39,7 @@ interface UserProfile {
   bmi_bmi?: string;
   tdee_tdee?: string;
   activity_level?: string;
+  exercise_activity?: string;
 }
 
 const DietPlanScreen = () => {
@@ -57,11 +59,46 @@ const DietPlanScreen = () => {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const exerciseModalAnim = useRef(new Animated.Value(0)).current;
   
+  // AsyncStorage keys for persisting user selection
+  const PLAN_GOAL_KEY = 'dietPlan_goal';
+  const PLAN_OPTION_KEY = 'dietPlan_optionId';
+  
   // Fetch user profile and latest scan data
   useEffect(() => {
     if (isFocused) {
       fetchUserData();
     }
+  }, [isFocused]);
+
+  // Restore saved goal/option selection when screen focuses
+  useEffect(() => {
+    const restoreSavedPlan = async () => {
+      try {
+        const [savedGoal, savedOptionId] = await Promise.all([
+          AsyncStorage.getItem(PLAN_GOAL_KEY),
+          AsyncStorage.getItem(PLAN_OPTION_KEY),
+        ]);
+        if (savedGoal) {
+          setSelectedGoal(savedGoal);
+          if (savedOptionId) {
+            const option = findOptionById(savedOptionId);
+            if (option) {
+              setSelectedOption(option);
+              setMacroCalculation(calculateMacros(option));
+            }
+          } else if (savedGoal === 'maintenance') {
+            // Ensure maintenance auto-selection if no specific option id stored
+            const maintenanceOption = maintenanceOptions[0];
+            setSelectedOption(maintenanceOption);
+            setMacroCalculation(calculateMacros(maintenanceOption));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restore saved diet plan', e);
+      }
+    };
+    restoreSavedPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFocused]);
 
   const fetchUserData = async () => {
@@ -76,7 +113,7 @@ const DietPlanScreen = () => {
         // Fetch user profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, email, name, age, gender, height_cm, weight_kg, bmi_bmi, tdee_tdee, activity_level')
+          .select('id, email, name, age, gender, height_cm, weight_kg, bmi_bmi, tdee_tdee, activity_level, exercise_activity')
           .eq('id', user.id)
           .single();
         
@@ -89,6 +126,16 @@ const DietPlanScreen = () => {
           if (profileData.activity_level) {
             setActivityLevel(profileData.activity_level);
           }
+
+          // Restore exercise frequency preference
+          try {
+            const savedExercise = await AsyncStorage.getItem('dietPlan_exerciseFrequency');
+            if (profileData.exercise_activity) {
+              setExerciseFrequency(profileData.exercise_activity);
+            } else if (savedExercise) {
+              setExerciseFrequency(savedExercise);
+            }
+          } catch (_) {}
           
           // Fetch latest scan for body fat percentage and TDEE from body_scans table
           const { data: scanData, error: scanError } = await supabase
@@ -172,6 +219,17 @@ const DietPlanScreen = () => {
       // Save to AsyncStorage for Dashboard sync
       await AsyncStorage.setItem('dietPlan_activityLevel', newActivityLevel);
       console.log('Saved activity level:', newActivityLevel);
+
+      // If user selects BMR-only, also reset exercise to 'none' and persist
+      if (newActivityLevel === 'bmr') {
+        setExerciseFrequency('none');
+        await AsyncStorage.setItem('dietPlan_exerciseFrequency', 'none');
+        await supabase
+          .from('profiles')
+          .update({ exercise_activity: 'none' })
+          .eq('id', profile.id);
+        setProfile(prev => prev ? { ...prev, exercise_activity: 'none' } : prev);
+      }
 
       // Recompute TDEE immediately using latest data and persist (rounded)
       if (profile?.weight_kg) {
@@ -330,6 +388,11 @@ const DietPlanScreen = () => {
     }
   ];
 
+  const findOptionById = (id: string): GoalOption | null => {
+    const all = [...deficitOptions, ...maintenanceOptions, ...gainOptions];
+    return all.find(o => o.id === id) || null;
+  };
+
   const calculateMacros = (option: GoalOption) => {
     if (!profile || !profile.weight_kg) {
       return null;
@@ -347,12 +410,7 @@ const DietPlanScreen = () => {
       tdee = calculateTDEEWithDefaults(weight, currentActivityLevel, exerciseFrequency, bodyFat);
     }
     
-    // Save calculated TDEE to AsyncStorage for Dashboard sync (rounded)
-    if (tdee) {
-      const rounded = Math.round(tdee);
-      AsyncStorage.setItem('dietPlan_tdee', rounded.toString());
-      console.log('Saved TDEE to AsyncStorage:', rounded);
-    }
+    // NOTE: do not persist here; side-effects in render cause scroll jump. Persistence handled in an effect.
     
     if (!tdee) {
       return null;
@@ -393,6 +451,24 @@ const DietPlanScreen = () => {
       carbs: Math.round(carbGrams)
     };
   };
+
+  // Persist latest TDEE only when inputs change to avoid re-renders while scrolling
+  useEffect(() => {
+    const persistTDEE = async () => {
+      if (!profile?.weight_kg) return;
+      const bodyFat = latestScan?.analysis_body_fat || 15;
+      const currentActivityLevel = profile.activity_level || activityLevel;
+      const computed = calculateTDEEWithDefaults(profile.weight_kg, currentActivityLevel, exerciseFrequency, bodyFat);
+      const rounded = Math.round(computed);
+      try {
+        await AsyncStorage.setItem('dietPlan_tdee', rounded.toString());
+      } catch (e) {
+        console.warn('Persist TDEE failed', e);
+      }
+    };
+    persistTDEE();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.weight_kg, latestScan?.analysis_body_fat, activityLevel, exerciseFrequency, profile?.activity_level]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -554,6 +630,9 @@ const DietPlanScreen = () => {
                 const maintenanceOption = maintenanceOptions[0];
                 setSelectedOption(maintenanceOption);
                 setMacroCalculation(calculateMacros(maintenanceOption));
+                // Persist selection
+                AsyncStorage.setItem(PLAN_GOAL_KEY, 'maintenance');
+                AsyncStorage.setItem(PLAN_OPTION_KEY, maintenanceOption.id);
               } else {
                 setShowGoalModal(true);
               }
@@ -725,6 +804,14 @@ const DietPlanScreen = () => {
                   // Save to AsyncStorage for Dashboard sync
                   AsyncStorage.setItem('dietPlan_exerciseFrequency', freq.value);
                   console.log('Saved exercise frequency:', freq.value);
+                  // Persist exercise frequency to profile
+                  if (profile?.id) {
+                    supabase
+                      .from('profiles')
+                      .update({ exercise_activity: freq.value })
+                      .eq('id', profile.id);
+                    setProfile(prev => prev ? { ...prev, exercise_activity: freq.value } : prev);
+                  }
                   // Recompute and persist TDEE with new exercise frequency
                   if (profile?.weight_kg) {
                     const weight = profile.weight_kg;
@@ -800,6 +887,9 @@ const DietPlanScreen = () => {
                       setSelectedOption(option);
                       setMacroCalculation(calculateMacros(option));
                       setShowGoalModal(false);
+                      // Persist selection
+                      AsyncStorage.setItem(PLAN_GOAL_KEY, 'deficit');
+                      AsyncStorage.setItem(PLAN_OPTION_KEY, option.id);
                     }}
                   >
                     <View style={styles.optionHeader}>
@@ -829,6 +919,9 @@ const DietPlanScreen = () => {
                       setSelectedOption(option);
                       setMacroCalculation(calculateMacros(option));
                       setShowGoalModal(false);
+                      // Persist selection
+                      AsyncStorage.setItem(PLAN_GOAL_KEY, 'maintenance');
+                      AsyncStorage.setItem(PLAN_OPTION_KEY, option.id);
                     }}
                   >
                     <View style={styles.optionHeader}>
@@ -859,6 +952,9 @@ const DietPlanScreen = () => {
                       setSelectedOption(option);
                       setMacroCalculation(calculateMacros(option));
                       setShowGoalModal(false);
+                      // Persist selection
+                      AsyncStorage.setItem(PLAN_GOAL_KEY, 'gain');
+                      AsyncStorage.setItem(PLAN_OPTION_KEY, option.id);
                     }}
                   >
                     <View style={styles.optionHeader}>
@@ -915,6 +1011,7 @@ const DietPlanScreen = () => {
       {renderHeader()}
       <ScrollView 
         style={styles.content} 
+        contentContainerStyle={{ paddingBottom: getBottomSpace() + 120 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

@@ -23,6 +23,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/navigation';
 import { BlurView } from 'expo-blur';
 import { getBottomSpace } from 'react-native-iphone-x-helper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChangePassword from './ChangePassword';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -36,6 +37,8 @@ const ProfileScreen = () => {
   const [vacationMode, setVacationMode] = useState(false);
   const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
   const [methodologyModalVisible, setMethodologyModalVisible] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activityLevel, setActivityLevel] = useState('sedentary');
 
   useEffect(() => {
     fetchProfile();
@@ -47,12 +50,17 @@ const ProfileScreen = () => {
       if (user) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('*, activity_level')
           .eq('id', user.id)
           .single();
 
         if (error) throw error;
         setProfile(data);
+        
+        // Set activity level from profile data
+        if (data.activity_level) {
+          setActivityLevel(data.activity_level);
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -90,6 +98,40 @@ const ProfileScreen = () => {
         },
       ]
     );
+  };
+
+  const updateActivityLevel = async (newActivityLevel: string) => {
+    try {
+      if (!profile?.id) {
+        console.error('No profile ID available');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ activity_level: newActivityLevel })
+        .eq('id', profile.id);
+
+      if (error) {
+        console.error('Error updating activity level:', error);
+        Alert.alert('Error', 'Failed to update activity level. Please try again.');
+        return;
+      }
+
+      // Update local profile state
+      setProfile((prev: any) => prev ? { ...prev, activity_level: newActivityLevel } : prev);
+      setActivityLevel(newActivityLevel);
+      
+      // Save to AsyncStorage for Dashboard sync (same as Diet Plan)
+      await AsyncStorage.setItem('dietPlan_activityLevel', newActivityLevel);
+      console.log('Saved activity level to AsyncStorage:', newActivityLevel);
+      
+      console.log('Activity level updated successfully:', newActivityLevel);
+      Alert.alert('Success', 'Activity level updated successfully!');
+    } catch (error) {
+      console.error('Error updating activity level:', error);
+      Alert.alert('Error', 'Failed to update activity level. Please try again.');
+    }
   };
 
   const renderTopSection = () => (
@@ -150,6 +192,32 @@ const ProfileScreen = () => {
           </TouchableOpacity>
         </View>
       )}
+    </View>
+  );
+
+  const renderActivityLevel = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Fitness Profile</Text>
+      
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => setShowActivityModal(true)}
+      >
+        <Ionicons name="fitness-outline" size={24} color={colors.buttonPrimary} />
+        <View style={{ flex: 1, marginLeft: 15 }}>
+          <Text style={styles.actionButtonText}>Activity Level</Text>
+          <Text style={{ color: colors.text.secondary, fontSize: 14, marginTop: 2 }}>
+            {activityLevel === 'bmr' ? 'BMR Only' :
+             activityLevel === 'sedentary' ? 'Sedentary (office job)' :
+             activityLevel === 'lightly active' ? 'Light Exercise (1-2 days/week)' :
+             activityLevel === 'moderately active' ? 'Moderate Exercise (3-5 days/week)' :
+             activityLevel === 'very active' ? 'Heavy Exercise (6-7 days/week)' :
+             activityLevel === 'extra active' ? 'Athlete (2x per day)' :
+             activityLevel}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
+      </TouchableOpacity>
     </View>
   );
 
@@ -251,7 +319,7 @@ const ProfileScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.actionButton} 
-        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+        onPress={() => Linking.openURL('mailto:contact@fitcommit.ai')}
       >
         <Ionicons name="chatbubbles-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Support & Feedback</Text>
@@ -289,7 +357,7 @@ const ProfileScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.actionButton} 
-        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+        onPress={() => Linking.openURL('mailto:contact@fitcommit.ai')}
       >
         <Ionicons name="mail-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>Contact Support</Text>
@@ -297,7 +365,7 @@ const ProfileScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity 
         style={styles.actionButton} 
-        onPress={() => Linking.openURL('https://www.fitcommit.ai/')}
+        onPress={() => Linking.openURL('https://www.fitcommit.ai/#faq')}
       >
         <Ionicons name="help-circle-outline" size={24} color={colors.buttonPrimary} />
         <Text style={styles.actionButtonText}>FAQ / Help Center</Text>
@@ -310,9 +378,10 @@ const ProfileScreen = () => {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: getBottomSpace() + 80 }}>
       {renderTopSection()}
       {renderAccountActions()}
+      {renderActivityLevel()}
       {renderSettings()}
       {renderLegalInfo()}
-      <Text style={styles.versionText}>FitCommit™ v1.0 </Text>
+      <Text style={styles.versionText}>FitCommit™ v1.1 </Text>
       
       {/* Methodology Modal */}
       <Modal visible={methodologyModalVisible} transparent animationType="fade" onRequestClose={() => setMethodologyModalVisible(false)}>
@@ -442,6 +511,67 @@ const ProfileScreen = () => {
           </View>
         </View>
       </Modal>
+      
+      {/* Activity Level Modal */}
+      <Modal visible={showActivityModal} transparent animationType="fade" onRequestClose={() => setShowActivityModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: colors.white, borderRadius: 22, padding: 0, width: '90%', maxHeight: '70%', alignItems: 'center', shadowColor: colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12 }}>
+            {/* Exit Icon Top Right */}
+            <TouchableOpacity onPress={() => setShowActivityModal(false)} style={{ position: 'absolute', top: 14, right: 14, zIndex: 10 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close-circle" size={28} color={colors.buttonPrimary} />
+            </TouchableOpacity>
+            
+            <View style={{ width: '100%', padding: 26, paddingTop: 20 }}>
+              <Text style={{ fontSize: 22, fontWeight: 'bold', color: colors.primary, marginBottom: 8, textAlign: 'center' }}>
+                Select Activity Level
+              </Text>
+              <View style={{ width: 38, height: 4, backgroundColor: colors.buttonPrimary, borderRadius: 2, marginBottom: 24, opacity: 0.18, alignSelf: 'center' }} />
+              
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {[
+                  { value: 'bmr', label: 'BMR Only', description: 'No exercise, bed rest' },
+                  { value: 'sedentary', label: 'Sedentary', description: 'Office job, no exercise' },
+                  { value: 'lightly active', label: 'Light Exercise', description: '1-2 days per week' },
+                  { value: 'moderately active', label: 'Moderate Exercise', description: '3-5 days per week' },
+                  { value: 'very active', label: 'Heavy Exercise', description: '6-7 days per week' },
+                  { value: 'extra active', label: 'Athlete', description: '2x per day, very active' }
+                ].map((level) => (
+                  <TouchableOpacity
+                    key={level.value}
+                    style={[
+                      styles.activityOption,
+                      activityLevel === level.value && styles.selectedActivityOption
+                    ]}
+                    onPress={() => {
+                      setActivityLevel(level.value);
+                      updateActivityLevel(level.value);
+                      setShowActivityModal(false);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[
+                        styles.activityOptionLabel,
+                        activityLevel === level.value && styles.selectedActivityOptionLabel
+                      ]}>
+                        {level.label}
+                      </Text>
+                      <Text style={[
+                        styles.activityOptionDescription,
+                        activityLevel === level.value && styles.selectedActivityOptionDescription
+                      ]}>
+                        {level.description}
+                      </Text>
+                    </View>
+                    {activityLevel === level.value && (
+                      <Ionicons name="checkmark-circle" size={24} color={colors.buttonPrimary} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -540,6 +670,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 20,
     marginBottom: getBottomSpace() + 20,
+  },
+  activityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  selectedActivityOption: {
+    borderColor: colors.buttonPrimary,
+    backgroundColor: colors.buttonPrimary + '10',
+  },
+  activityOptionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  selectedActivityOptionLabel: {
+    color: colors.buttonPrimary,
+  },
+  activityOptionDescription: {
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  selectedActivityOptionDescription: {
+    color: colors.buttonPrimary + 'CC',
   },
 });
 
