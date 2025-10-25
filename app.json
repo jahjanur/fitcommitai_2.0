@@ -2,12 +2,11 @@
   "expo": {
     "name": "FitCommit",
     "slug": "FitCommit",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fitcommitai.fitcommit",
-      "buildNumber": "12",
-      "deploymentTarget": "15.0",
+      "buildNumber": "13",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
