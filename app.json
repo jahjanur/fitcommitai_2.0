@@ -3,16 +3,13 @@
     "name": "FitCommit",
     "slug": "FitCommit",
     "version": "1.0.9",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fitcommitai.fitcommit",
       "buildNumber": "12",
-      "deploymentTarget": "17.0",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "appleTeamId": "3VGAJWGC76"
+      }
     },
     "extra": {
       "eas": {

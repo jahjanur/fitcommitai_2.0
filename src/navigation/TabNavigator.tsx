@@ -22,7 +22,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 type CustomTabBarNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Custom Tab Bar Component
-const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps<ParamListBase>) => {
+const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const tabWidth = 100 / state.routes.length;
 
   return (
@@ -33,7 +33,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps<Para
       style={styles.tabBarContainer}
     >
       <View style={styles.tabBar}>
-        {state.routes.map((route, index: number) => {
+        {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const label =
             options.tabBarLabel !== undefined
@@ -50,8 +50,8 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps<Para
              ? options.tabBarIcon({ focused: isFocused, color: isFocused ? (Math.floor(state.routes.length / 2) === index ? colors.white : colors.primary) : colors.text.secondary, size: Math.floor(state.routes.length / 2) === index ? 36 : 24 })
              : undefined;
 
-           if (icon && isValidElement(icon) && icon.props.name) {
-             iconName = icon.props.name;
+           if (icon && isValidElement(icon) && (icon.props as any).name) {
+             iconName = (icon.props as any).name;
            } else if (typeof icon === 'string') { // Handle cases where icon might be a string
              iconName = icon; // Although less common for Ionicons
            }
@@ -132,7 +132,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps<Para
               accessibilityState={isFocused ? { selected: true } : {}}
               // Use optional chaining for accessibilityLabel and testID
               accessibilityLabel={options.tabBarAccessibilityLabel?.toString()}
-              testID={options.tabBarTestID?.toString()}
+              testID={(options as any).tabBarTestID?.toString()}
               onPress={onPress}
               onLongPress={onLongPress}
               style={styles.tabButton}
@@ -221,7 +221,7 @@ const TabNavigator = () => {
       />
        <Tab.Screen
         name="Profile"
-        component={PlaceholderScreen}
+        component={() => <PlaceholderScreen title="Profile" />}
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => <Ionicons name={focused ? "person" : "person-outline"} color={color} size={size} />,
@@ -288,7 +288,6 @@ const styles = StyleSheet.create({
     }),
    },
   tabLabel: {
-    fontSize: 12,
     marginTop: 4,
     ...typography.caption,
   },

@@ -12,7 +12,7 @@ const PlaceholderScreen = ({ title }: PlaceholderScreenProps) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.primary, colors.secondary]}
+        colors={[colors.primary, colors.darkBlue]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.header}

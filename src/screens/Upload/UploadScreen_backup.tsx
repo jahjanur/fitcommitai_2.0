@@ -111,7 +111,7 @@ const UploadScreen = () => {
   const [uploadThumbnails, setUploadThumbnails] = useState<{ front?: string; side?: string; back?: string }>({});
   const progressAnim = useRef(new Animated.Value(0.33)).current;
   const [scanCooldown, setScanCooldown] = useState<number>(0);
-  const [cooldownInterval, setCooldownInterval] = useState<NodeJS.Timeout | null>(null);
+  const [cooldownInterval, setCooldownInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [overrideScanLock, setOverrideScanLock] = useState(false);
   const [lastScanTime, setLastScanTime] = useState<string | null>(null);
   const navigation = useNavigation<RootStackNavigationProp>();
@@ -474,7 +474,7 @@ const UploadScreen = () => {
 
   // Tip animation for analyzing
   useEffect(() => {
-    let tipInterval: NodeJS.Timeout;
+    let tipInterval: ReturnType<typeof setInterval>;
     if (currentStep === 'analyzing') {
       Animated.loop(
         Animated.sequence([

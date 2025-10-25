@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NavigationProp } from '../../types/navigation';
+import { RootStackNavigationProp } from '../../types/navigation';
 import { colors } from '../../theme/colors';
 
 interface AnalysisResponse {
@@ -10,7 +10,7 @@ interface AnalysisResponse {
 }
 
 const WelcomeScreen = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<RootStackNavigationProp>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [bodyFatRange, setBodyFatRange] = useState<string | null>(null);
 

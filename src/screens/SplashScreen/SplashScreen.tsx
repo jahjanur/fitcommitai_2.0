@@ -37,7 +37,7 @@ const CustomSplashScreen: React.FC<CustomSplashScreenProps> = ({ onFinish }) => 
           Animated.timing(circleScale, {
             toValue: 1,
             duration: 1200,
-            easing: Easing.out(Easing.back),
+            easing: Easing.out(Easing.back(1.7)),
             useNativeDriver: true,
           }),
         ]).start(async () => {

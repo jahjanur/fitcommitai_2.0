@@ -177,8 +177,8 @@ const SignupScreen = () => {
 
     return [
       styles.input,
-      isFocused && styles.inputFocused,
-      hasError && styles.inputError,
+      isFocused ? styles.inputFocused : null,
+      hasError ? styles.inputError : null,
     ];
   };
 
@@ -371,8 +371,8 @@ const SignupScreen = () => {
               style={[
                 styles.input,
                 { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-                focusedField === 'activityLevel' && styles.inputFocused,
-                errors.activityLevel && styles.inputError,
+                focusedField === 'activityLevel' ? styles.inputFocused : null,
+                errors.activityLevel ? styles.inputError : null,
               ]}
               onPress={() => setActivityDropdownOpen((open) => !open)}
               onFocus={() => setFocusedField('activityLevel')}
