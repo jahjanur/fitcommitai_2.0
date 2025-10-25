@@ -209,7 +209,7 @@ const UploadScreen = () => {
     if (uri.endsWith('.png')) mime = 'image/png';
     else if (uri.endsWith('.jpg') || uri.endsWith('.jpeg')) mime = 'image/jpeg';
     // Read as base64
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' as any });
     return `data:${mime};base64,${base64}`;
   };
 
