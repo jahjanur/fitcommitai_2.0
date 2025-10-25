@@ -80,12 +80,12 @@ const LoginScreen = () => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
+            style={[styles.input, errors.email ? styles.inputError : null]}
             placeholder="Enter your email"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
-            onChangeText={(text) => {
+            onChangeText={(text: string) => {
               setEmail(text);
               if (errors.email) {
                 setErrors({ ...errors, email: '' });
@@ -98,11 +98,11 @@ const LoginScreen = () => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={[styles.input, errors.password && styles.inputError]}
+            style={[styles.input, errors.password ? styles.inputError : null]}
             placeholder="Enter your password"
             secureTextEntry
             value={password}
-            onChangeText={(text) => {
+            onChangeText={(text: string) => {
               setPassword(text);
               if (errors.password) {
                 setErrors({ ...errors, password: '' });

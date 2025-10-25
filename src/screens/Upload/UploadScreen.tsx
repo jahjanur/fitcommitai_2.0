@@ -121,18 +121,16 @@ const SmartAnalysisScreen = () => {
   const [durationWeeks, setDurationWeeks] = useState<string>('8');
   const [latestBodyFat, setLatestBodyFat] = useState<number | null>(null);
   
-  // Image viewing modal state
-  const [imageModalVisible, setImageModalVisible] = useState(false);
-  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
-  const [selectedImageLabel, setSelectedImageLabel] = useState<string>('');
+  // Image modal state
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   
   const navigation = useNavigation<RootStackNavigationProp>();
 
-  // Handle image viewing
-  const handleImagePress = (imageUri: string, label: string) => {
-    setSelectedImageUri(imageUri);
-    setSelectedImageLabel(label);
-    setImageModalVisible(true);
+  // Handle image click
+  const handleImagePress = (imageUri: string) => {
+    setSelectedImage(imageUri);
+    setModalVisible(true);
   };
 
   // Fetch user profile (copy logic as needed)
@@ -801,7 +799,7 @@ const SmartAnalysisScreen = () => {
       contentContainerStyle={styles.modernAfterPhotoContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* AI Vision Results - Show at top when available */}
+      {/* Results at the top */}
       {afterPhotoResult && (
         <View style={styles.modernResults}>
           <Animated.View style={[styles.resultsHeader, { opacity: tipFadeAnim }]}>
@@ -821,11 +819,11 @@ const SmartAnalysisScreen = () => {
                 </View>
                 <TouchableOpacity 
                   style={styles.imageWrapper}
-                  onPress={() => handleImagePress(afterPhotoImage!, 'Before')}
+                  onPress={() => handleImagePress(afterPhotoImage!)}
                 >
                   <Image source={{ uri: afterPhotoImage! }} style={styles.transformationImage} />
                   <View style={styles.imageOverlay} />
-                  <View style={styles.imageTapIndicator}>
+                  <View style={styles.imageClickIndicator}>
                     <Ionicons name="expand" size={16} color={colors.white} />
                   </View>
                 </TouchableOpacity>
@@ -845,11 +843,11 @@ const SmartAnalysisScreen = () => {
                 </View>
                 <TouchableOpacity 
                   style={styles.imageWrapper}
-                  onPress={() => handleImagePress(afterPhotoResult.after_photo_url, 'After')}
+                  onPress={() => handleImagePress(afterPhotoResult.after_photo_url)}
                 >
                   <Image source={{ uri: afterPhotoResult.after_photo_url }} style={styles.transformationImage} />
                   <View style={[styles.imageOverlay, styles.afterImageOverlay]} />
-                  <View style={styles.imageTapIndicator}>
+                  <View style={styles.imageClickIndicator}>
                     <Ionicons name="expand" size={16} color={colors.white} />
                   </View>
                 </TouchableOpacity>
@@ -982,48 +980,41 @@ const SmartAnalysisScreen = () => {
     </ScrollView>
   );
 
-  // Image viewing modal component
-  const renderImageModal = () => (
-    <Modal
-      visible={imageModalVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={() => setImageModalVisible(false)}
-    >
-      <View style={styles.imageModalOverlay}>
-        <TouchableOpacity 
-          style={styles.imageModalCloseArea}
-          onPress={() => setImageModalVisible(false)}
-        >
-          <View style={styles.imageModalContent}>
-            <View style={styles.imageModalHeader}>
-              <Text style={styles.imageModalTitle}>{selectedImageLabel}</Text>
-              <TouchableOpacity
-                style={styles.imageModalCloseButton}
-                onPress={() => setImageModalVisible(false)}
-              >
-                <Ionicons name="close" size={24} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.imageModalImageContainer}>
-              <Image 
-                source={{ uri: selectedImageUri! }} 
-                style={styles.imageModalImage}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-  );
-
   // Main render
   return (
     <>
-      {/* Image Viewing Modal */}
-      {renderImageModal()}
-      
+      {/* Image Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={styles.modalCloseArea}
+            onPress={() => setModalVisible(false)}
+            activeOpacity={1}
+          >
+            <View style={styles.modalContent}>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.white} />
+              </TouchableOpacity>
+              {selectedImage && (
+                <Image 
+                  source={{ uri: selectedImage }} 
+                  style={styles.modalImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* Countdown Modal with glassmorphism effect */}
       <Modal
         visible={scanCooldown > 0 && !overrideScanLock && (currentStep === 'front' || currentStep === 'side' || currentStep === 'back')}
@@ -1904,8 +1895,8 @@ const styles = StyleSheet.create({
     color: colors.buttonPrimary,
   },
   
-  // Image tap indicator
-  imageTapIndicator: {
+  // Image click indicator
+  imageClickIndicator: {
     position: 'absolute',
     top: 8,
     right: 8,
@@ -1917,56 +1908,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   
-  // Image modal styles
-  imageModalOverlay: {
+  // Modal styles
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imageModalCloseArea: {
+  modalCloseArea: {
     flex: 1,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imageModalContent: {
+  modalContent: {
     width: '90%',
-    maxHeight: '80%',
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    height: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    overflow: 'hidden',
-  },
-  imageModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.buttonPrimary,
-  },
-  imageModalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.white,
-  },
-  imageModalCloseButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 1,
   },
-  imageModalImageContainer: {
-    flex: 1,
-    minHeight: 400,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageModalImage: {
+  modalImage: {
     width: '100%',
     height: '100%',
-    maxHeight: 500,
   },
 });
 

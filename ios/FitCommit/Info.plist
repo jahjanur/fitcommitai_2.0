@@ -27,7 +27,6 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>fitcommit</string>
           <string>com.fitcommitai.fitcommit</string>
         </array>
       </dict>
@@ -39,11 +38,9 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>11</string>
+    <string>12</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
-    <key>LSMinimumSystemVersion</key>
-    <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>
@@ -53,8 +50,6 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
-    <key>RCTNewArchEnabled</key>
-    <true/>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
@@ -69,6 +64,8 @@
     <array>
       <string>UIInterfaceOrientationPortrait</string>
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
@@ -81,9 +78,5 @@
     <string>Light</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>FitCommit needs access to your photo library so you can select and upload body analysis photos to track your fitness progress.</string>
-    <key>NSCameraUsageDescription</key>
-    <string>FitCommit needs camera access to take body analysis photos for tracking your fitness progress and body composition changes.</string>
   </dict>
 </plist>

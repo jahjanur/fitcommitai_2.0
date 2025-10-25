@@ -2,39 +2,18 @@
   "expo": {
     "name": "FitCommit",
     "slug": "FitCommit",
-    "version": "1.1.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "version": "1.0.9",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splashscreen_logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#6B73FF"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fitcommitai.fitcommit",
       "buildNumber": "12",
+      "deploymentTarget": "17.0",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.fitcommitai.fitcommit"
+      "appleTeamId": "3VGAJWGC76"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-font"
-    ],
-    "scheme": "fitcommit",
     "extra": {
       "eas": {
         "projectId": "103198c4-16a7-4e73-b5d1-210dc4df97cb"

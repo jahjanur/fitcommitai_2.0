@@ -7,7 +7,6 @@ node_modules/
 .expo/
 dist/
 web-build/
-expo-env.d.ts
 
 # Untracked command history
 src/screens/Dashboard/npx expo start --dev-client --lan
